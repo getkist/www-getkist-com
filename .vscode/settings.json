@@ -1,5 +1,6 @@
 {
 
+
     // Eslint
     // ========================================================================
 
@@ -26,7 +27,7 @@
     // ========================================================================
 
 
-    "git.autofetch": true,                              
+    "git.autofetch": true,
 
     // Prettier
     // ========================================================================
@@ -37,20 +38,10 @@
     "prettier.singleQuote": true,                       // Use single quotes instead of double quotes
 
 
-
-
-
     // Typescript
     // ========================================================================
 
     "typescript.tsdk": "node_modules/typescript/lib",   // Use the TypeScript version from node_modules
-
-
-
-
-
-
-
 
 
     // ========================================================================
@@ -309,8 +300,8 @@
     // Minimap
     // ========================================================================
 
-    "editor.minimap.autohide": true,
-    "editor.minimap.enabled": true,
+    "editor.minimap.autohide": "mouseover",
+    "editor.minimap.enabled": false,
     "editor.minimap.maxColumn": 120,
     "editor.minimap.renderCharacters": true,
     "editor.minimap.scale": 3,
@@ -390,6 +381,7 @@
 
     "files.associations": {
         "*.jinja": "jinja",
+        "*.html.jinja": "jinja-html",
         "*.njk": "jinja",
         "*.yml": "yaml",
         "*.yaml": "yaml"
@@ -448,9 +440,9 @@
 
 
 
-    "workbench.editor.enablePreview": false,            
-    "workbench.colorTheme": "Default Dark Modern",            
-    "workbench.iconTheme": "vscode-icons",              
+    "workbench.editor.enablePreview": false,
+    "workbench.colorTheme": "Default Dark Modern",
+    "workbench.iconTheme": "vs-seti",
 
     // ...
 
@@ -468,15 +460,6 @@
     "window.titleSeparator": " — ",
     "window.zoomLevel": -1,
     "window.zoomPerWindow": true,
-
-    // ========================================================================
-    // Features
-    // ========================================================================
-
-    // Accessibility Signals
-    // ========================================================================
-
-    "accessibility.signalOptions.debouncePositionChanges": false,
 
 
     // ...
@@ -665,6 +648,11 @@
     "python.analysis.generateWithTypeAnnotation": false,
     "python.analysis.gotoDefinitionInStringLiteral": true,
     // "python.analysis.ignore": [""],
+
+    "python.analysis.ignore": [
+    "bup",
+    "tmp"
+    ],
     "python.analysis.importFormat": "absolute",
     // "python.analysis.include": [""],
     "python.analysis.includeAliasesFromUserFiles": false,
@@ -782,19 +770,21 @@
         "W": "Warning"
     },
 
+
     // Pylint
     // ========================================================================
 
     "pylint.args": [
-        "--max-line-length=79",
-        "--ignore=E126,E221,E222,E251",
-        "--load-plugins",
-        "--load-plugins=pylint_django",
-        "pylint_django",
+        // "src"
+        // "--max-line-length=79",
+        // "--ignore=E126,E221,E222,E251",
+        // "--load-plugins",
+        // "--load-plugins=pylint_django",
+        // "pylint_django",
     ],
     "pylint.cwd": "${workspaceFolder}",
     "pylint.enabled": true,
-    // "pylint.ignorePatterns": [""],
+    "pylint.ignorePatterns": ["bup/*", "bup","tmp"],
     "pylint.importStrategy": "useBundled",
     // "pylint.interpreter": [""],
     // "pylint.path": [""],
@@ -807,6 +797,75 @@
         "info": "Information"
     },
 
+
+    // Tinymist
+    // ========================================================================
+
+    "tinymist.compileStatus": "enable",
+    "tinymist.completion.postfix": true,
+    "tinymist.completion.postfixUfcs": true,
+    "tinymist.completion.postfixUfcsLeft": true,
+    "tinymist.completion.postfixUfcsRight": true,
+    "tinymist.completion.triggerOnSnippetPlaceholders": false,
+    "tinymist.configureDefaultWordSeparator": "enable",
+    "tinymist.dragAndDrop": "enable",
+    "tinymist.exportPdf": "onSave",
+    "tinymist.fontPaths": [
+        "typ/assets/font"
+    ],
+    "tinymist.formatterMode": "typstyle",
+    "tinymist.formatterPrintWidth": 79,
+    "tinymist.onEnterEvent": true,
+    // "tinymist.outputPath": "",
+    "tinymist.preview.cursorIndicator": true,
+    "tinymist.preview.invertColors": null,
+    "tinymist.preview.partialRendering": true,
+    "tinymist.preview.refresh": "onType",
+    "tinymist.preview.scrollSync": "onSelectionChangeByMouse",
+    "tinymist.previewFeature": "enable",
+    "tinymist.renderDocs": "enable",
+    // "tinymist.rootPath": "",
+    "tinymist.semanticTokens": "disable",
+    // "tinymist.serverPath": "",
+    // "tinymist.showExportFileIn": null,
+    // "tinymist.systemFonts": false,
+    "tinymist.trace.server": "off",
+    "tinymist.typingContinueCommentsOnNewline": true,
+    "cSpell.words": [
+        "Buurten",
+        "Buurtpanel",
+        "buurtpeiling",
+        "buurtpvisievormer",
+        "buurtvisievormer",
+        "Datatable",
+        "datatables",
+        "Gemeenten",
+        "vorm",
+        "Wijken"
+    ],
+    "makefile.configureOnOpen": true,
+    "[jsonc]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // "tinymist.typstExtraArgs": [
+    //     ""
+    // ],
+
+
+    // Jinja
+    // ========================================================================
+
+
+    "[jinja]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "[jinja-html]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
+    "python-envs.pythonProjects": []
 
 
 }
