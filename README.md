@@ -25,7 +25,7 @@ This repository contains the documentation website for all projects under the [g
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm, yarn, or pnpm
 
 ### Installation

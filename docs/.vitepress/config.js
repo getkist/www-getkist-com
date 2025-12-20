@@ -5,11 +5,11 @@ export default defineConfig({
   title: "Kist",
   description: "Documentation for getkist projects",
   base: "/",
-  
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     logo: 'https://raw.githubusercontent.com/getkist/brand/master/src/logo/kist.png',
-    
+
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/getting-started' },
@@ -40,7 +40,13 @@ export default defineConfig({
           text: 'Projects',
           items: [
             { text: 'Overview', link: '/projects/' },
-            // Project-specific docs will be added dynamically
+             { text: "kist", link: "/projects/kist" },
+             { text: ".github-private", link: "/projects/.github-private" },
+             { text: "brand", link: "/projects/brand" },
+             { text: "kist.js.org", link: "/projects/kist.js.org" },
+             { text: "kist-cli", link: "/projects/kist-cli" },
+             { text: "kist-action-template", link: "/projects/kist-action-template" },
+             { text: "kist-action-svg", link: "/projects/kist-action-svg" }
           ]
         }
       ]

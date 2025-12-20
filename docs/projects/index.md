@@ -8,46 +8,48 @@ Kist is a growing collection of open-source tools and libraries. Each project is
 
 ## All Projects
 
-Below is a list of all projects under the getkist organization. Each project has its own dedicated documentation.
-
 :::tip
-This list is automatically updated from the getkist GitHub organization. Run `npm run sync:docs` to fetch the latest project information.
+Last updated: 12/20/2025. Run `npm run sync:docs` to fetch the latest project information.
 :::
 
-## Categories
+### Other
 
-Projects are organized by category to help you find what you need:
+#### [.github-private](./.github-private.md)
 
-### Development Tools
-Tools that enhance your development workflow.
+[View on GitHub](https://github.com/getkist/.github-private) | [Documentation](./.github-private.md)
 
-### Libraries
-Reusable libraries for common tasks.
+#### [brand](./brand.md)
 
-### Frameworks
-Full-featured frameworks for building applications.
+[View on GitHub](https://github.com/getkist/brand) | [Documentation](./brand.md)
 
-### Utilities
-Helper utilities and scripts.
+#### [kist.js.org](./kist.js.org.md)
+
+[View on GitHub](https://github.com/getkist/kist.js.org) | [Documentation](./kist.js.org.md)
+
+#### [kist-cli](./kist-cli.md)
+
+[View on GitHub](https://github.com/getkist/kist-cli) | [Documentation](./kist-cli.md)
+
+#### [kist-action-svg](./kist-action-svg.md)
+
+[View on GitHub](https://github.com/getkist/kist-action-svg) | [Documentation](./kist-action-svg.md)
+
+### TypeScript
+
+#### [kist](./kist.md)
+
+Package Pipeline Processor
+
+[View on GitHub](https://github.com/getkist/kist) | [Documentation](./kist.md)
+
+#### [kist-action-template](./kist-action-template.md)
+
+[View on GitHub](https://github.com/getkist/kist-action-template) | [Documentation](./kist-action-template.md)
+
 
 ## Contributing
 
-Want to add a new project to the Kist ecosystem? Check out our [contributing guide](/contributing) for guidelines on creating and proposing new projects.
-
-## Project Template
-
-Each project should include:
-- Clear README with installation and usage
-- Comprehensive documentation
-- Examples and use cases
-- Tests
-- License information
-
-## Featured Projects
-
-:::info Coming Soon
-Featured projects will be highlighted here. Check back soon!
-:::
+Want to add a new project to the Kist ecosystem? Check out our [contributing guide](/contributing) for guidelines.
 
 ---
 
