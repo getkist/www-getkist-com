@@ -1,0 +1,25 @@
+{
+  "name": "www-getkist-com",
+  "version": "1.0.0",
+  "description": "Documentation website for getkist projects",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "sync:docs": "node scripts/sync-docs.js"
+  },
+  "keywords": [
+    "documentation",
+    "getkist",
+    "vitepress"
+  ],
+  "author": "Scape Agency",
+  "license": "MIT",
+  "devDependencies": {
+    "vitepress": "^1.0.0"
+  },
+  "dependencies": {
+    "vue": "^3.4.0"
+  }
+}
