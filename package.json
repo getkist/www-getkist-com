@@ -4,9 +4,9 @@
   "description": "Documentation website for getkist projects",
   "type": "module",
   "scripts": {
-    "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs",
+    "docs:dev": "vitepress dev src",
+    "docs:build": "vitepress build src",
+    "docs:preview": "vitepress preview src",
     "sync:docs": "node scripts/sync-docs.js"
   },
   "keywords": [

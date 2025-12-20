@@ -16,11 +16,11 @@ npm run sync:docs         # Sync docs from getkist repos
 
 ```
 www-getkist-com/
-├── docs/                 # All documentation content
+├── src/                 # All documentation content (VitePress site)
 │   ├── .vitepress/      # Configuration
 │   │   └── config.js    # Main config file
 │   ├── guide/           # User guides
-│   ├── projects/        # Project docs (auto-generated)
+│   ├── projects/        # Project docs (auto-synced from repo doc/ folders)
 │   ├── api/             # API reference
 │   └── index.md         # Homepage
 │
@@ -31,8 +31,8 @@ www-getkist-com/
 │   └── deploy.yml       # Auto-deploy to GitHub Pages
 │
 ├── package.json         # Dependencies and scripts
-├── README.md           # Project overview
-└── SETUP.md            # Detailed setup guide
+├── README.md            # Project overview
+└── SETUP.md             # Detailed setup guide
 ```
 
 ## Key URLs
@@ -45,8 +45,8 @@ www-getkist-com/
 
 ### New Guide Page
 
-1. Create file: `docs/guide/your-page.md`
-2. Add to sidebar in `docs/.vitepress/config.js`
+1. Create file: `src/guide/your-page.md`
+2. Add to sidebar in `src/.vitepress/config.js`
 
 ### Update Project Docs
 
@@ -56,7 +56,7 @@ npm run sync:docs
 
 ## Configuration
 
-Main config: [docs/.vitepress/config.js](docs/.vitepress/config.js)
+Main config: [src/.vitepress/config.js](src/.vitepress/config.js)
 
 ```javascript
 export default defineConfig({
@@ -82,14 +82,14 @@ Push to `main` or `dev` branch → Auto-deploys via GitHub Actions
 
 ```bash
 npm run docs:build
-# Deploy contents of docs/.vitepress/dist/
+# Deploy contents of src/.vitepress/dist/
 ```
 
 ## Troubleshooting
 
 ### Dev server won't start
 ```bash
-rm -rf docs/.vitepress/cache node_modules
+rm -rf src/.vitepress/cache node_modules
 npm install
 npm run docs:dev
 ```
@@ -107,7 +107,7 @@ npm run sync:docs
 npm run docs:build
 
 # Clear cache
-rm -rf docs/.vitepress/cache
+rm -rf src/.vitepress/cache
 ```
 
 ## Project Features

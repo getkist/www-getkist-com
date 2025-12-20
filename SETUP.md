@@ -20,10 +20,10 @@ npm run sync:docs
 
 This script:
 - Fetches all repositories from the getkist GitHub organization
-- Retrieves README files and metadata
-- Generates individual project documentation pages
-- Updates the projects index page
-- Updates the sidebar navigation
+- Pulls each repository's `doc/` directory (fallback to `docs/`, then README)
+- Stores docs under `src/projects/<repo>/`
+- Ensures each project has an `index.md`
+- Updates the projects index page and sidebar navigation
 
 ### 3. Start Development Server
 
@@ -40,7 +40,7 @@ www-getkist-com/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml          # GitHub Pages deployment
-├── docs/
+├── src/
 │   ├── .vitepress/
 │   │   └── config.js          # VitePress configuration
 │   ├── api/
@@ -53,7 +53,7 @@ www-getkist-com/
 │   │   └── best-practices.md
 │   ├── projects/
 │   │   ├── index.md           # Projects overview (auto-generated)
-│   │   └── [project].md       # Project pages (auto-generated)
+│   │   └── <project>/...      # Synced doc trees per project
 │   ├── contributing.md
 │   └── index.md               # Homepage
 ├── scripts/
@@ -70,10 +70,10 @@ www-getkist-com/
 
 1. Create a new markdown file in the appropriate directory:
    ```bash
-   touch docs/guide/new-guide.md
+  touch src/guide/new-guide.md
    ```
 
-2. Add the page to the sidebar in `docs/.vitepress/config.js`:
+2. Add the page to the sidebar in `src/.vitepress/config.js`:
    ```javascript
    sidebar: {
      '/guide/': [
@@ -104,7 +104,7 @@ npm run sync:docs
 
 If you need to customize a project's documentation beyond the auto-generated content:
 
-1. Edit the generated file in `docs/projects/[project-name].md`
+1. Edit the generated files under `src/projects/[project-name]/`
 2. Your changes will be overwritten next time you run `sync:docs`
 3. Consider using git submodules for more complex project docs
 
@@ -114,17 +114,17 @@ For projects with extensive documentation, you can use git submodules:
 
 ```bash
 # Add a project's docs as a submodule
-git submodule add https://github.com/getkist/[project-name].git docs/projects/[project-name]-src
+git submodule add https://github.com/getkist/[project-name].git src/projects/[project-name]-src
 
 # Update the config to point to the submodule
-# Edit docs/.vitepress/config.js
+# Edit src/.vitepress/config.js
 ```
 
 ## Configuration
 
 ### Site Configuration
 
-Edit `docs/.vitepress/config.js` to customize:
+Edit `src/.vitepress/config.js` to customize:
 
 - Site title and description
 - Navigation menu
@@ -164,7 +164,7 @@ Edit `scripts/sync-docs.js` to customize:
 npm run docs:build
 ```
 
-Output will be in `docs/.vitepress/dist/`
+Output will be in `src/.vitepress/dist/`
 
 ### Preview Production Build
 
@@ -219,7 +219,7 @@ netlify deploy --prod
 npm run docs:build
 
 # Copy dist folder to your server
-scp -r docs/.vitepress/dist/* user@server:/path/to/webroot/
+scp -r src/.vitepress/dist/* user@server:/path/to/webroot/
 ```
 
 ## Maintenance
@@ -278,10 +278,10 @@ If `npm run sync:docs` fails:
 
 If build fails:
 
-1. Check `docs/.vitepress/config.js` for syntax errors
+1. Check `src/.vitepress/config.js` for syntax errors
 2. Verify all markdown files are valid
 3. Check for broken internal links
-4. Clear cache: `rm -rf docs/.vitepress/cache`
+4. Clear cache: `rm -rf src/.vitepress/cache`
 
 ### Development Server Issues
 
@@ -309,7 +309,7 @@ If `npm run docs:dev` fails:
 Create a custom theme by extending VitePress:
 
 ```javascript
-// docs/.vitepress/theme/index.js
+// src/.vitepress/theme/index.js
 import DefaultTheme from 'vitepress/theme'
 import './custom.css'
 
@@ -321,7 +321,7 @@ export default {
 
 ### Plugins
 
-Add VitePress plugins in `docs/.vitepress/config.js`:
+Add VitePress plugins in `src/.vitepress/config.js`:
 
 ```javascript
 export default defineConfig({
@@ -335,7 +335,7 @@ export default defineConfig({
 
 ### Custom Components
 
-Create Vue components in `docs/.vitepress/theme/components/`:
+Create Vue components in `src/.vitepress/theme/components/`:
 
 ```vue
 <!-- MyComponent.vue -->

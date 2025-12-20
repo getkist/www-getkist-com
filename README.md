@@ -66,7 +66,7 @@ npm run sync:docs
 ## Documentation Structure
 
 ```
-docs/
+src/
 ├── .vitepress/          # VitePress configuration
 │   └── config.js        # Site configuration
 ├── guide/               # User guides
@@ -75,32 +75,33 @@ docs/
 │   ├── configuration.md
 │   ├── architecture.md
 │   └── best-practices.md
-├── projects/            # Project-specific docs (auto-generated)
-│   └── index.md
+├── projects/            # Project docs (auto-synced from repo doc/ folders)
+│   ├── index.md
+│   └── <project>/...    # Synced doc trees per project
 ├── api/                 # API reference docs
 │   └── index.md
 ├── contributing.md      # Contributing guide
-└── index.md            # Homepage
+└── index.md             # Homepage
 ```
 
 ## Adding Documentation
 
 ### Automatic Sync
 
-Run `npm run sync:docs` to automatically fetch and generate documentation pages for all getkist repositories. The script:
+Run `npm run sync:docs` to automatically fetch documentation from all getkist repositories. The script:
 
 1. Fetches all repos from the getkist organization
-2. Retrieves README files and metadata
-3. Generates individual project pages
-4. Updates the projects index
-5. Updates the sidebar navigation
+2. Pulls each repo's `doc/` directory (falls back to `docs/`, then README)
+3. Stores each doc tree under `src/projects/<repo>/`
+4. Ensures an `index.md` entry point for each project
+5. Updates the projects index and sidebar navigation
 
 ### Manual Documentation
 
 To add custom documentation:
 
-1. Create markdown files in the appropriate directory
-2. Update `.vitepress/config.js` to add navigation links
+1. Create markdown files in the appropriate directory under `src/`
+2. Update `src/.vitepress/config.js` to add navigation links
 3. Use frontmatter for page metadata
 
 Example:
@@ -127,7 +128,7 @@ npm run docs:build
 
 ### Other Platforms
 
-The built site (in `docs/.vitepress/dist`) can be deployed to any static hosting service:
+The built site (in `src/.vitepress/dist`) can be deployed to any static hosting service:
 - Vercel
 - Netlify
 - Cloudflare Pages
@@ -145,7 +146,7 @@ GITHUB_TOKEN=your_github_token
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](docs/contributing.md) for details.
+We welcome contributions! Please see our [Contributing Guide](src/contributing.md) for details.
 
 ### Development Workflow
 
@@ -159,12 +160,14 @@ We welcome contributions! Please see our [Contributing Guide](docs/contributing.
 
 ```
 .
-├── docs/                # Documentation source files
+├── src/                 # Documentation source files (VitePress site)
+│   ├── .vitepress/     # Site configuration
+│   └── projects/       # Synced doc trees per project
 ├── scripts/            # Build and sync scripts
-│   └── sync-docs.js   # Documentation sync script
-├── .vitepress/        # VitePress config
-├── package.json       # Dependencies and scripts
-└── README.md         # This file
+│   └── sync-docs.js    # Documentation sync script
+├── .github/            # CI/CD workflows
+├── package.json        # Dependencies and scripts
+└── README.md           # This file
 ```
 
 ## Technology Stack
