@@ -831,6 +831,7 @@
     // "tinymist.systemFonts": false,
     "tinymist.trace.server": "off",
     "tinymist.typingContinueCommentsOnNewline": true,
+    "cSpell.enabled": false,
     "cSpell.words": [
         "Buurten",
         "Buurtpanel",
