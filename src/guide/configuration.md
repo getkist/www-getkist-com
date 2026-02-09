@@ -179,6 +179,10 @@ pipeline:
 
 ## Config Inheritance
 
+Kist supports configuration inheritance through the `extends` keyword, allowing you to create reusable base configurations.
+
+### Basic Usage
+
 Create a base config and extend it:
 
 ```yaml
@@ -186,15 +190,137 @@ Create a base config and extend it:
 name: my-project
 plugins:
   - @getkist/action-typescript
+  - @getkist/action-sass
 
+defaults:
+  outputDir: dist
+```
+
+```yaml
 # kist.dev.yml
 extends: ./kist.base.yml
+
 pipeline:
   dev:
     stages:
       - name: build
         steps:
           - action: TypeScriptCompilerAction
+            options:
+              sourceMap: true
+```
+
+### How Merging Works
+
+When extending a configuration:
+
+1. **Objects are deep merged** - Child properties override parent properties
+2. **Arrays are replaced** - Child arrays completely replace parent arrays
+3. **Primitives are overwritten** - Simple values in child override parent
+
+```yaml
+# base.yml
+project:
+  name: my-project
+  settings:
+    debug: false
+    timeout: 30
+plugins:
+  - plugin-a
+  - plugin-b
+
+# child.yml  
+extends: ./base.yml
+project:
+  settings:
+    debug: true    # Overrides to true
+    newOption: 1   # Added
+    # timeout: 30  # Inherited from base
+plugins:
+  - plugin-c       # Replaces entire array
+```
+
+**Result:**
+```yaml
+project:
+  name: my-project
+  settings:
+    debug: true
+    timeout: 30
+    newOption: 1
+plugins:
+  - plugin-c
+```
+
+### Multiple Inheritance
+
+Extend from multiple configs (processed in order):
+
+```yaml
+extends:
+  - ./configs/base.yml
+  - ./configs/typescript.yml
+  - ./configs/testing.yml
+
+# Your overrides here
+```
+
+### Environment-Specific Configs
+
+```yaml
+# kist.yml (base)
+name: my-app
+plugins:
+  - @getkist/action-typescript
+
+defaults:
+  minify: false
+  sourceMap: true
+```
+
+```yaml
+# kist.production.yml
+extends: ./kist.yml
+
+defaults:
+  minify: true
+  sourceMap: false
+
+pipeline:
+  build:
+    stages:
+      - name: optimize
+        steps:
+          - action: JavaScriptMinifyAction
+```
+
+Run with: `kist --config kist.production.yml`
+
+### Shared Team Configs
+
+Create organization-wide configs:
+
+```yaml
+# @myorg/kist-config-base/index.yml
+name: "{{ project.name }}"
+
+plugins:
+  - @getkist/action-typescript
+  - @getkist/action-eslint
+  - @getkist/action-jest
+
+defaults:
+  compilerOptions:
+    target: ES2020
+    strict: true
+```
+
+```yaml
+# Your project's kist.yml
+extends: "@myorg/kist-config-base"
+
+project:
+  name: my-specific-project
 ```
 
 ## CLI Options

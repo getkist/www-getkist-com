@@ -44,9 +44,16 @@ export default defineConfig({
           ]
         },
         {
-          text: 'Advanced',
+          text: 'Reference',
           items: [
-            { text: 'Plugin Development', link: '/guide/plugin-development' },
+            { text: 'Core Actions', link: '/guide/core-actions' },
+            { text: 'Plugin Development', link: '/guide/plugin-development' }
+          ]
+        },
+        {
+          text: 'Community',
+          items: [
+            { text: 'Contributing', link: '/guide/contributing' },
             { text: 'Best Practices', link: '/guide/best-practices' },
             { text: 'Migration Guide', link: '/guide/migration' }
           ]
