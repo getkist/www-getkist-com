@@ -1,87 +1,236 @@
 # API Reference
 
-Comprehensive API documentation for Kist projects.
+Programmatic API for using kist in Node.js applications.
 
-## Overview
+## Installation
 
-This section contains detailed API documentation for all Kist projects. Each project has its own API reference with complete type definitions, method signatures, and usage examples.
-
-## Project APIs
-
-Select a project to view its API documentation:
-
-:::tip
-API documentation is automatically generated from TypeScript definitions and JSDoc comments in each project's source code.
-:::
-
-## Structure
-
-API documentation typically includes:
-
-### Classes
-Complete class documentation with:
-- Constructor parameters
-- Properties
-- Methods
-- Type definitions
-- Usage examples
-
-### Functions
-Function documentation with:
-- Parameters
-- Return types
-- Overloads
-- Examples
-
-### Types & Interfaces
-TypeScript definitions including:
-- Type aliases
-- Interfaces
-- Enums
-- Generics
-
-### Constants
-Exported constants and configuration values.
-
-## How to Read API Docs
-
-### Type Notation
-
-```typescript
-function example(param: string): Promise<number>
+```bash
+npm install @getkist/kist
 ```
 
-- `param: string` - Parameter name and type
-- `Promise<number>` - Return type
-
-### Optional Parameters
+## Quick Start
 
 ```typescript
-function example(required: string, optional?: number)
+import { Kist, Pipeline, Stage, Step } from '@getkist/kist';
+
+// Load from kist.yml
+const kist = new Kist();
+await kist.load('kist.yml');
+await kist.run('build');
 ```
 
-The `?` indicates an optional parameter.
+## Core Classes
 
-### Type Unions
+### Kist
+
+The main entry point for programmatic usage.
 
 ```typescript
-type Status = 'pending' | 'completed' | 'failed'
+import { Kist } from '@getkist/kist';
+
+const kist = new Kist(options);
 ```
 
-The `|` indicates a union of possible values.
+#### Constructor Options
 
-## Contributing
+```typescript
+interface KistOptions {
+  configPath?: string;      // Path to kist.yml
+  cwd?: string;             // Working directory
+  env?: Record<string, string>;  // Environment variables
+  verbose?: boolean;        // Enable verbose logging
+}
+```
 
-Help improve our API documentation:
-- Report unclear documentation
-- Suggest better examples
-- Fix typos or errors
-- Add missing information
+#### Methods
 
-See our [contributing guide](/contributing) for details.
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `load(configPath)` | `Promise<void>` | Load configuration file |
+| `run(pipelineName)` | `Promise<Result>` | Run a pipeline |
+| `runStage(pipeline, stage)` | `Promise<Result>` | Run a specific stage |
+| `registerPlugin(plugin)` | `void` | Register a plugin |
 
----
+### Pipeline
 
-:::info
-For project-specific API documentation, navigate to the individual project pages in the [Projects](/projects/) section.
-:::
+Represents a sequence of stages.
+
+```typescript
+interface Pipeline {
+  name: string;
+  stages: Stage[];
+  env?: Record<string, string>;
+}
+```
+
+### Stage
+
+A named group of steps.
+
+```typescript
+interface Stage {
+  name: string;
+  steps: Step[];
+  condition?: string;
+  continueOnError?: boolean;
+}
+```
+
+### Step
+
+An individual action execution.
+
+```typescript
+interface Step {
+  action: string;
+  options?: Record<string, unknown>;
+  condition?: string;
+  continueOnError?: boolean;
+}
+```
+
+## Creating Pipelines Programmatically
+
+```typescript
+import { Kist, Pipeline } from '@getkist/kist';
+
+const pipeline: Pipeline = {
+  name: 'build',
+  stages: [
+    {
+      name: 'compile',
+      steps: [
+        {
+          action: 'TypeScriptCompilerAction',
+          options: {
+            tsconfig: 'tsconfig.json'
+          }
+        }
+      ]
+    }
+  ]
+};
+
+const kist = new Kist();
+kist.addPipeline(pipeline);
+await kist.run('build');
+```
+
+## Plugin API
+
+### Creating a Plugin
+
+```typescript
+import { Plugin, Action, ActionContext, ActionResult } from '@getkist/kist';
+
+const myPlugin: Plugin = {
+  name: 'my-plugin',
+  version: '1.0.0',
+  actions: [MyAction]
+};
+
+class MyAction implements Action {
+  name = 'MyAction';
+  
+  async execute(context: ActionContext): Promise<ActionResult> {
+    const { options, logger, cwd } = context;
+    
+    // Your action logic here
+    
+    return {
+      success: true,
+      outputs: {}
+    };
+  }
+}
+
+export default myPlugin;
+```
+
+### ActionContext
+
+```typescript
+interface ActionContext {
+  options: Record<string, unknown>;  // Step options
+  cwd: string;                        // Working directory
+  env: Record<string, string>;        // Environment variables
+  logger: Logger;                     // Logging interface
+  outputs: Record<string, unknown>;   // Previous outputs
+}
+```
+
+### ActionResult
+
+```typescript
+interface ActionResult {
+  success: boolean;
+  error?: Error;
+  outputs?: Record<string, unknown>;
+  metrics?: {
+    duration?: number;
+    files?: number;
+  };
+}
+```
+
+## Events
+
+Subscribe to pipeline events:
+
+```typescript
+const kist = new Kist();
+
+kist.on('pipeline:start', (name) => {
+  console.log(`Pipeline ${name} started`);
+});
+
+kist.on('stage:start', (stage) => {
+  console.log(`Stage ${stage.name} started`);
+});
+
+kist.on('step:complete', (step, result) => {
+  console.log(`Step ${step.action} completed:`, result.success);
+});
+
+kist.on('pipeline:complete', (name, result) => {
+  console.log(`Pipeline ${name} finished`);
+});
+```
+
+## Error Handling
+
+```typescript
+try {
+  const result = await kist.run('build');
+  
+  if (!result.success) {
+    console.error('Pipeline failed:', result.error);
+  }
+} catch (error) {
+  console.error('Unexpected error:', error);
+}
+```
+
+## TypeScript Support
+
+Full TypeScript definitions are included:
+
+```typescript
+import type {
+  Kist,
+  Pipeline,
+  Stage,
+  Step,
+  Action,
+  ActionContext,
+  ActionResult,
+  Plugin,
+  KistOptions
+} from '@getkist/kist';
+```
+
+## Next Steps
+
+- [CLI Reference](/api/cli) - Command-line interface
+- [Plugin Development](/guide/plugin-development) - Create plugins
+- [Configuration](/guide/configuration) - YAML reference

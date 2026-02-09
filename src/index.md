@@ -2,51 +2,113 @@
 layout: home
 
 hero:
-  name: "Kist"
-  text: "Modern Development Tools"
-  tagline: "A collection of open-source tools and libraries by Scape Agency"
+  name: "kist"
+  text: "Package Pipeline Processor"
+  tagline: "A lightweight build tool with plugin architecture for TypeScript and web projects"
   image:
     src: https://raw.githubusercontent.com/getkist/brand/master/src/logo/kist.png
-    alt: Kist
+    alt: kist
   actions:
     - theme: brand
       text: Get Started
       link: /guide/getting-started
     - theme: alt
-      text: View on GitHub
-      link: https://github.com/getkist
+      text: View Plugins
+      link: /plugins/
+    - theme: alt
+      text: GitHub
+      link: https://github.com/getkist/kist
 
 features:
+  - icon: 🔌
+    title: Plugin Architecture
+    details: Extend functionality with official and community plugins. Install only what you need.
+  - icon: 🔄
+    title: Pipeline System
+    details: Modular stages and steps for complex build workflows with dependency management.
+  - icon: ⚡
+    title: Live Reload
+    details: Enhanced developer experience with hot reloading and watch mode support.
   - icon: 📦
-    title: Modular Architecture
-    details: Build your projects with composable, maintainable components
-  - icon: ⚡️
-    title: Performance First
-    details: Optimized for speed and efficiency in production environments
+    title: TypeScript First
+    details: Native TypeScript support with full type definitions out of the box.
   - icon: 🛠️
-    title: Developer Experience
-    details: Intuitive APIs and comprehensive documentation
-  - icon: 🌐
-    title: Open Source
-    details: Free and open-source tools built for the community
+    title: Highly Configurable
+    details: YAML-based configuration with sensible defaults and extensive customization.
+  - icon: 🚀
+    title: Zero Config Start
+    details: Get started quickly with automatic detection and intelligent defaults.
 ---
 
-## Welcome to Kist
+<div class="vp-doc" style="padding: 2rem;">
 
-Kist is a collection of modern development tools and libraries created by [Scape Agency](https://www.scape.agency). Our mission is to provide developers with high-quality, well-documented, and easy-to-use tools that enhance productivity and code quality.
+## Quick Install
 
-## Quick Links
+```bash
+# Install globally
+npm install -g kist
 
-- [Browse all projects](/projects/)
-- [Getting Started Guide](/guide/getting-started)
-- [Contributing](/contributing)
-- [GitHub Organization](https://github.com/getkist)
+# Or as a dev dependency
+npm install --save-dev kist
+```
 
-## Featured Projects
+## Quick Start
 
-Explore our growing collection of tools and libraries designed to solve common development challenges.
+```bash
+# Initialize a new kist project
+kist init
 
----
+# Run your build pipeline
+kist --config kist.yml
+```
+
+## Official Plugins
+
+| Plugin | Description |
+|--------|-------------|
+| [@getkist/action-sass](https://npmjs.com/package/@getkist/action-sass) | SCSS/Sass compilation with source maps |
+| [@getkist/action-postcss](https://npmjs.com/package/@getkist/action-postcss) | PostCSS processing with autoprefixer |
+| [@getkist/action-typescript](https://npmjs.com/package/@getkist/action-typescript) | TypeScript compilation |
+| [@getkist/action-eslint](https://npmjs.com/package/@getkist/action-eslint) | ESLint code linting |
+| [@getkist/action-prettier](https://npmjs.com/package/@getkist/action-prettier) | Prettier code formatting |
+| [@getkist/action-jest](https://npmjs.com/package/@getkist/action-jest) | Jest test runner |
+| [@getkist/action-terser](https://npmjs.com/package/@getkist/action-terser) | JavaScript minification |
+| [@getkist/action-tsup](https://npmjs.com/package/@getkist/action-tsup) | Bundle with tsup (esbuild) |
+| [@getkist/action-svg](https://npmjs.com/package/@getkist/action-svg) | SVG sprite generation |
+| [@getkist/action-nunjucks](https://npmjs.com/package/@getkist/action-nunjucks) | Nunjucks template rendering |
+
+[View all plugins →](/plugins/)
+
+## Example Configuration
+
+```yaml
+name: my-project
+version: 1.0.0
+
+plugins:
+  - @getkist/action-sass
+  - @getkist/action-typescript
+
+pipeline:
+  build:
+    stages:
+      - name: styles
+        steps:
+          - action: StyleProcessingAction
+            options:
+              inputFile: src/styles/main.scss
+              outputFile: dist/css/main.css
+              
+      - name: scripts
+        steps:
+          - action: TypeScriptCompilerAction
+            options:
+              tsconfig: tsconfig.json
+```
+
+[Learn more about configuration →](/guide/configuration)
+
+</div>
 
 <p align="center">
   <b>Made with ❤️ by <a href="https://www.scape.agency" target="_blank">Scape Agency</a></b>
