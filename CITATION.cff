@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+title: www-getkist-com
+version: 1.0.0
+date-released: "2026-02-24"
+message: >-
+    If you use this software, please cite it using
+    the metadata from this file.
+type: software
+abstract: Documentation Hub for Kist Projects - centralized documentation for all getkist projects built with VitePress
+license: MIT
+repository-code: https://github.com/getkist/www-getkist-com
+url: https://www.getkist.com/
+keywords:
+    - documentation
+    - getkist
+    - vitepress
+    - kist
+authors:
+    - given-names: Lars Bastiaan
+      family-names: van Vianen
+      email: lars@getkist.com
+      affiliation: Kist
+      orcid: https://orcid.org/0000-0002-8790-8630
+contact:
+    - given-names: Lars
+      family-names: van Vianen
+      email: lars@getkist.com

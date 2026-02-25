@@ -1,0 +1,105 @@
+{
+    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+    "@id": "https://github.com/getkist/www-getkist-com",
+    "@type": "SoftwareSourceCode",
+    "applicationCategory": "WebApplication",
+    "applicationSubCategory": "Documentation",
+    "author": [
+        {
+            "@id": "https://orcid.org/0000-0002-8790-8630",
+            "@type": "Person",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Kist"
+            },
+            "email": "lars@getkist.com",
+            "familyName": "van Vianen",
+            "givenName": "Lars Bastiaan"
+        }
+    ],
+    "buildInstructions": "https://github.com/getkist/www-getkist-com#readme",
+    "citation": [
+        {
+            "@type": "CreativeWork",
+            "name": "www-getkist-com",
+            "url": "https://github.com/getkist/www-getkist-com"
+        }
+    ],
+    "codeRepository": "https://github.com/getkist/www-getkist-com",
+    "contIntegration": "https://github.com/getkist/www-getkist-com/actions",
+    "contributor": [],
+    "copyrightHolder": {
+        "@type": "Organization",
+        "name": "Kist"
+    },
+    "copyrightYear": 2025,
+    "creator": [
+        {
+            "@id": "https://orcid.org/0000-0002-8790-8630",
+            "@type": "Person",
+            "familyName": "van Vianen",
+            "givenName": "Lars Bastiaan"
+        }
+    ],
+    "dateCreated": "2025-01-01",
+    "dateModified": "2026-02-24",
+    "datePublished": "2026-02-24",
+    "description": "Documentation Hub for Kist Projects - centralized documentation for all getkist projects built with VitePress",
+    "developmentStatus": "https://www.repostatus.org/#active",
+    "downloadUrl": "https://github.com/getkist/www-getkist-com/releases",
+    "editor": [],
+    "embargoDate": null,
+    "funder": [],
+    "funding": null,
+    "hasPart": [],
+    "identifier": "https://github.com/getkist/www-getkist-com",
+    "installUrl": null,
+    "isAccessibleForFree": true,
+    "isPartOf": null,
+    "issueTracker": "https://github.com/getkist/www-getkist-com/issues",
+    "keywords": ["documentation", "getkist", "vitepress", "kist"],
+    "license": "https://spdx.org/licenses/MIT",
+    "maintainer": [
+        {
+            "@id": "https://orcid.org/0000-0002-8790-8630",
+            "@type": "Person",
+            "familyName": "van Vianen",
+            "givenName": "Lars Bastiaan"
+        }
+    ],
+    "memoryRequirements": null,
+    "name": "www-getkist-com",
+    "operatingSystem": ["Linux", "macOS", "Windows"],
+    "permissions": null,
+    "position": null,
+    "processorRequirements": null,
+    "producer": {
+        "@type": "Organization",
+        "name": "Kist"
+    },
+    "programmingLanguage": ["TypeScript", "Vue", "Markdown"],
+    "provider": {
+        "@type": "Organization",
+        "name": "Kist"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "Kist"
+    },
+    "readme": "https://github.com/getkist/www-getkist-com#readme",
+    "referencePublication": null,
+    "relatedLink": [
+        "https://www.getkist.com/"
+    ],
+    "releaseNotes": null,
+    "runtimePlatform": "Node.js",
+    "softwareHelp": "https://github.com/getkist/www-getkist-com#readme",
+    "softwareRequirements": ["Node.js"],
+    "softwareVersion": "1.0.0",
+    "sponsor": [],
+    "storageRequirements": null,
+    "supportingData": [],
+    "targetProduct": null,
+    "url": "https://www.getkist.com/",
+    "version": "1.0.0"
+}
