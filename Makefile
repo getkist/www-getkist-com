@@ -114,7 +114,15 @@ serve-static: build-static ## Serve static site locally
 # Static Site Generation
 # =============================================================================
 
-build-static: clean-dist build-vite collectstatic render fix-paths ## Build complete static site
+build-static: clean-dist build-vite ## Build complete static site
+	@echo "Collecting static files (pre-render)..."
+	$(PYTHON) $(SRC_DIR)/manage.py collectstatic --noinput --settings=project.settings.settings_render
+	@echo "Rendering HTML pages..."
+	$(PYTHON) $(SRC_DIR)/manage.py render_static --settings=project.settings.settings_render
+	@echo "Collecting static files (post-render)..."
+	$(PYTHON) $(SRC_DIR)/manage.py collectstatic --noinput --settings=project.settings.settings_render
+	@echo "Fixing paths for static site..."
+	$(PYTHON) $(BIN_DIR)/fix_static_paths.py $(DIST_DIR)
 	@echo "Static site built in $(DIST_DIR)/"
 
 clean-dist: ## Clean dist directory
