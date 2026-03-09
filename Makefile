@@ -18,6 +18,7 @@
 # Export port variables for Procfile/honcho
 export DJANGO_PORT
 export VITE_PORT
+export MKDOCS_PORT
 
 # Prevent make from treating targets as files
 .PHONY: help install install-dev start stop clean clean-ports clean-dist \
