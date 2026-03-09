@@ -7,7 +7,9 @@
     "docs:dev": "vitepress dev src",
     "docs:build": "vitepress build src",
     "docs:preview": "vitepress preview src",
-    "sync:docs": "node scripts/sync-docs.js"
+    "sync:docs": "node scripts/sync-docs.js",
+    "format": "npx prettier --write src/**/*.ts",
+    "lint": "npx eslint src/**/*.ts"
   },
   "keywords": [
     "documentation",
