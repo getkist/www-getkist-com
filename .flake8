@@ -1,0 +1,218 @@
+# =============================================================================
+# Flake8 Configuration
+# https://flake8.pycqa.org/en/latest/
+# =============================================================================
+#
+# This file is portable - copy to other repos without modification.
+#
+# Flake8 is a fast Python linter that combines PyFlakes, pycodestyle (PEP 8),
+# and McCabe complexity checker. It's lighter than pylint but catches most
+# common issues.
+#
+# Usage:
+#   poetry run flake8 src/              # Check src/ directory
+#   poetry run flake8 src/ --count      # Show error count
+#   poetry run flake8 src/ --statistics # Show error statistics
+#   poetry run flake8 src/ --show-source # Show source code with errors
+#   poetry run flake8 src/ --benchmark  # Show timing info
+#
+# Error code prefixes:
+#   E = pycodestyle errors (PEP 8 violations)
+#   W = pycodestyle warnings
+#   F = PyFlakes errors (logical errors, unused imports)
+#   C = McCabe complexity (C901 = too complex)
+#
+# Disable inline:
+#   # noqa           - Disable all checks on this line
+#   # noqa: E501     - Disable specific error
+#   # noqa: E501,W503 - Disable multiple errors
+#
+# =============================================================================
+
+
+# =============================================================================
+# Main Settings
+# =============================================================================
+
+[flake8]
+
+# Maximum line length (matches PEP 8 / black)
+max-line-length = 79
+
+# File patterns to check
+filename = *.py
+
+# Include these patterns
+include = *.py
+
+# Built-in names to not flag as undefined
+builtins = _,gettext
+
+
+# =============================================================================
+# Ignored Rules
+# =============================================================================
+#
+# These rules are disabled globally. Use sparingly - prefer fixing issues.
+# Rules can be disabled per-file using per-file-ignores below.
+#
+# =============================================================================
+
+ignore =
+    # Black compatibility - Black adds space before : in slices
+    E203,
+    # Block comment style - we use multiple # for headers
+    E266,
+    # Line too long - Black handles line length
+    E501,
+    # Line break before binary operator - Black style
+    W503,
+    # Line break after binary operator - conflicts with W503
+    W504,
+    # Unused imports - needed in __init__.py for API exposure
+    F401,
+    # Star imports undefined - needed for settings files
+    F403,
+    # Lambda assignment - sometimes cleaner than def
+    E731,
+
+# Temporary ignores (remove these as issues are fixed)
+extend-ignore =
+
+
+# =============================================================================
+# Complexity
+# =============================================================================
+#
+# McCabe complexity measures code branching (if/for/while/etc).
+# Functions exceeding this threshold get C901 errors.
+#
+# Thresholds:
+#   1-5:   Simple, low risk
+#   6-10:  Moderate complexity
+#   11-20: Complex, consider refactoring
+#   21+:   Very complex, should refactor
+#
+# =============================================================================
+
+max-complexity = 15
+
+
+# =============================================================================
+# Output Format
+# =============================================================================
+
+# Show the source code for each error
+show-source = True
+
+# Show PEP 8 text for each error
+show-pep8 = True
+
+# Count errors at the end
+statistics = True
+
+# Output format: default, pylint, github
+# Use 'github' for GitHub Actions annotations
+format = default
+
+
+# =============================================================================
+# Error Selection
+# =============================================================================
+#
+# Explicitly select which error categories to check.
+# E = pycodestyle errors, F = PyFlakes, W = warnings, C90 = complexity
+#
+# =============================================================================
+
+select = E,F,W,C90
+
+
+# =============================================================================
+# Exclusions
+# =============================================================================
+#
+# Directories and files to skip entirely.
+# Use for generated code, third-party, and build artifacts.
+#
+# =============================================================================
+
+exclude =
+    # Version control
+    .git,
+    # Python cache
+    __pycache__,
+    # Testing/tools cache
+    .pytest_cache,
+    .mypy_cache,
+    .tox,
+    # Virtual environments
+    .venv,
+    venv,
+    # Packaging
+    .eggs,
+    *.egg,
+    *.egg-info,
+    # Build outputs
+    build,
+    dist,
+    public,
+    # Coverage reports
+    htmlcov,
+    # Development directories
+    bup,
+    wip,
+    tmp,
+    # Generated documentation
+    site,
+    doc,
+    docs,
+    # Django migrations (auto-generated)
+    migrations,
+    # Node.js dependencies
+    node_modules,
+    # Third-party/vendor code
+    vendor,
+
+# Additional exclusions (use for project-specific files)
+extend-exclude =
+    conftest.py,
+
+
+# =============================================================================
+# Per-File Ignores
+# =============================================================================
+#
+# Override ignored rules for specific files or patterns.
+# Format: pattern:CODE1,CODE2
+#
+# =============================================================================
+
+per-file-ignores =
+    # __init__.py: Allow unused imports (API exposure) and star imports
+    __init__.py:F401,F403
+    # Test files: Relaxed rules for test code
+    **/tests/*:F401,F403,E501,E731
+    **/tst/*:F401,F403,E501,E731
+    # conftest.py: Allow unused imports (fixtures) and redefinitions
+    conftest.py:F401,F811
+
+
+# =============================================================================
+# noqa Comments
+# =============================================================================
+
+# Allow # noqa comments to disable checks inline
+enable-noqa = True
+
+
+# =============================================================================
+# Docstrings (flake8-docstrings plugin)
+# =============================================================================
+#
+# If flake8-docstrings is installed, use Google style.
+# Install: poetry add flake8-docstrings --group dev
+#
+# =============================================================================
+
+docstring-convention = google

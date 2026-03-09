@@ -1,0 +1,127 @@
+# =============================================================================
+# Browserslist Configuration
+# =============================================================================
+#
+# Target browsers for frontend tooling (Autoprefixer, Babel, PostCSS, etc.)
+# Documentation: https://browsersl.ist
+#
+# This file is portable - copy to other repos without modification.
+#
+# -----------------------------------------------------------------------------
+# Usage
+# -----------------------------------------------------------------------------
+#
+#   View resolved browser list:
+#     npx browserslist
+#
+#   Check coverage percentage:
+#     npx browserslist --coverage
+#
+#   Debug specific query:
+#     npx browserslist "last 2 versions, not dead"
+#
+#   Online tool:
+#     https://browsersl.ist
+#
+# -----------------------------------------------------------------------------
+# How It Works
+# -----------------------------------------------------------------------------
+#
+# Tools like Autoprefixer, Babel, and PostCSS read this file to determine
+# which browsers to support. This affects:
+#
+#   - CSS vendor prefixes (-webkit-, -moz-, etc.)
+#   - JavaScript transpilation (arrow functions, async/await)
+#   - Polyfills included in bundles
+#
+# More specific queries = smaller bundles (less legacy code)
+# More permissive queries = broader compatibility
+#
+# -----------------------------------------------------------------------------
+# Query Syntax
+# -----------------------------------------------------------------------------
+#
+#   defaults          Browserslist default (> 0.5%, last 2 versions, not dead)
+#   > 1%              Browsers with > 1% global usage
+#   last 2 versions   Last 2 versions of each browser
+#   not dead          Exclude browsers without updates for 2+ years
+#   not op_mini all   Exclude Opera Mini (limited JS support)
+#
+#   Chrome >= 80      Chrome version 80 and newer
+#   Firefox ESR       Firefox Extended Support Release
+#   iOS >= 13         Safari on iOS 13+
+#
+#   Combine with:
+#     ,  = OR (union)
+#     and = AND (intersection)
+#     not = exclude
+#
+# =============================================================================
+
+
+# =============================================================================
+# Default Query
+# =============================================================================
+#
+# Start with sensible defaults:
+#   - > 0.5% global usage
+#   - Last 2 versions of each browser
+#   - Not dead (still receiving updates)
+#   - Exclude Opera Mini (very limited JavaScript support)
+#
+# -----------------------------------------------------------------------------
+
+defaults
+> 0.5%
+last 2 versions
+not dead
+not op_mini all
+
+
+# =============================================================================
+# Explicit Browser Targets
+# =============================================================================
+#
+# Minimum versions we explicitly support.
+# These should align with your user analytics and feature requirements.
+#
+# ES2020+ features available in these versions:
+#   - Optional chaining (?.)
+#   - Nullish coalescing (??)
+#   - BigInt
+#   - Promise.allSettled
+#   - Dynamic import()
+#   - globalThis
+#
+# -----------------------------------------------------------------------------
+
+# Chromium-based (Chrome, Edge, Opera, Brave, etc.)
+Chrome >= 80
+Edge >= 80
+
+# Firefox
+Firefox >= 75
+
+# Safari (macOS and iOS)
+Safari >= 13
+iOS >= 13
+
+
+# =============================================================================
+# Excluded Browsers
+# =============================================================================
+#
+# Browsers we intentionally don't support:
+#
+#   Internet Explorer:  Dead since 2022, no modern JS support
+#   Opera Mini:         Runs JS on server, very limited support
+#   UC Browser:         Limited market share, poor standards compliance
+#
+# These are excluded by "not dead" and explicit version requirements.
+#
+# To explicitly exclude (if needed):
+#   not ie 11
+#   not ie_mob 11
+#   not op_mini all
+#
+# =============================================================================
