@@ -42,7 +42,7 @@
         }
     ],
     "dateCreated": "2025-01-01",
-    "dateModified": "2026-02-24",
+    "dateModified": "2026-03-09",
     "datePublished": "2026-02-24",
     "description": "Documentation Hub for Kist Projects - centralized documentation for all getkist projects built with VitePress",
     "developmentStatus": "https://www.repostatus.org/#active",
@@ -57,7 +57,12 @@
     "isAccessibleForFree": true,
     "isPartOf": null,
     "issueTracker": "https://github.com/getkist/www-getkist-com/issues",
-    "keywords": ["documentation", "getkist", "vitepress", "kist"],
+    "keywords": [
+        "documentation",
+        "getkist",
+        "vitepress",
+        "kist"
+    ],
     "license": "https://spdx.org/licenses/MIT",
     "maintainer": [
         {
@@ -69,7 +74,11 @@
     ],
     "memoryRequirements": null,
     "name": "www-getkist-com",
-    "operatingSystem": ["Linux", "macOS", "Windows"],
+    "operatingSystem": [
+        "Linux",
+        "macOS",
+        "Windows"
+    ],
     "permissions": null,
     "position": null,
     "processorRequirements": null,
@@ -77,7 +86,11 @@
         "@type": "Organization",
         "name": "Kist"
     },
-    "programmingLanguage": ["TypeScript", "Vue", "Markdown"],
+    "programmingLanguage": [
+        "TypeScript",
+        "Vue",
+        "Markdown"
+    ],
     "provider": {
         "@type": "Organization",
         "name": "Kist"
@@ -94,12 +107,14 @@
     "releaseNotes": null,
     "runtimePlatform": "Node.js",
     "softwareHelp": "https://github.com/getkist/www-getkist-com#readme",
-    "softwareRequirements": ["Node.js"],
+    "softwareRequirements": [
+        "Node.js"
+    ],
     "softwareVersion": "1.0.0",
     "sponsor": [],
     "storageRequirements": null,
     "supportingData": [],
     "targetProduct": null,
     "url": "https://www.getkist.com/",
-    "version": "1.0.0"
+    "version": "0.1.0"
 }
