@@ -16,46 +16,53 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Plugins', link: '/plugins/' },
       { text: 'API', link: '/api/' },
+      { text: 'Compare', link: '/guide/comparison' },
       {
-        text: 'v0.1.62',
+        text: 'v0.1.76',
         items: [
-          { text: 'Changelog', link: '/changelog' },
+          { text: 'Releases', link: 'https://github.com/getkist/kist/releases' },
           { text: 'npm', link: 'https://npmjs.com/package/kist' }
         ]
       }
     ],
 
     sidebar: {
+      // Organised along the four Diátaxis forms: tutorials teach, how-to
+      // guides solve a problem you already have, reference describes, and
+      // explanation gives background. Keeping them apart is what stops a
+      // reference page from drifting into a tutorial.
       '/guide/': [
         {
-          text: 'Introduction',
+          text: 'Tutorials',
           items: [
             { text: 'Getting Started', link: '/guide/getting-started' },
-            { text: 'Installation', link: '/guide/installation' },
-            { text: 'Configuration', link: '/guide/configuration' }
+            { text: 'Installation', link: '/guide/installation' }
           ]
         },
         {
-          text: 'Core Concepts',
+          text: 'How-to guides',
           items: [
-            { text: 'Pipeline Architecture', link: '/guide/architecture' },
-            { text: 'Actions', link: '/guide/actions' },
-            { text: 'Stages & Steps', link: '/guide/stages-steps' }
+            { text: 'Set up your editor', link: '/guide/editor-setup' },
+            { text: 'Cache your build', link: '/guide/caching' },
+            { text: 'Use plugins', link: '/plugins/using-plugins' },
+            { text: 'Write a plugin', link: '/guide/plugin-development' },
+            { text: 'Contribute', link: '/guide/contributing' }
           ]
         },
         {
           text: 'Reference',
           items: [
+            { text: 'Configuration', link: '/guide/configuration' },
             { text: 'Core Actions', link: '/guide/core-actions' },
-            { text: 'Plugin Development', link: '/guide/plugin-development' }
+            { text: 'CLI', link: '/api/cli' }
           ]
         },
         {
-          text: 'Community',
+          text: 'Explanation',
           items: [
-            { text: 'Contributing', link: '/guide/contributing' },
-            { text: 'Best Practices', link: '/guide/best-practices' },
-            { text: 'Migration Guide', link: '/guide/migration' }
+            { text: 'Pipeline Architecture', link: '/guide/architecture' },
+            { text: 'How kist compares', link: '/guide/comparison' },
+            { text: 'Best Practices', link: '/guide/best-practices' }
           ]
         }
       ],
@@ -79,7 +86,8 @@ export default defineConfig({
           items: [
             { text: 'action-typescript', link: '/plugins/action-typescript' },
             { text: 'action-terser', link: '/plugins/action-terser' },
-            { text: 'action-tsup', link: '/plugins/action-tsup' }
+            { text: 'action-tsup', link: '/plugins/action-tsup' },
+            { text: 'action-tsdown', link: '/plugins/action-tsdown' }
           ]
         },
         {
@@ -94,6 +102,7 @@ export default defineConfig({
           text: 'Asset Plugins',
           items: [
             { text: 'action-svg', link: '/plugins/action-svg' },
+            { text: 'action-fantasticon', link: '/plugins/action-fantasticon' },
             { text: 'action-nunjucks', link: '/plugins/action-nunjucks' }
           ]
         }
@@ -104,23 +113,8 @@ export default defineConfig({
           items: [
             { text: 'Overview', link: '/api/' },
             { text: 'CLI', link: '/api/cli' },
-            { text: 'Configuration', link: '/api/configuration' }
-          ]
-        },
-        {
-          text: 'Core Classes',
-          items: [
-            { text: 'Kist', link: '/api/kist' },
-            { text: 'Pipeline', link: '/api/pipeline' },
-            { text: 'ActionRegistry', link: '/api/action-registry' },
-            { text: 'PluginManager', link: '/api/plugin-manager' }
-          ]
-        },
-        {
-          text: 'Interfaces',
-          items: [
-            { text: 'ActionPlugin', link: '/api/action-plugin' },
-            { text: 'ActionInterface', link: '/api/action-interface' }
+            { text: 'Configuration Reference', link: '/guide/configuration' },
+            { text: 'JSON Schema', link: 'https://www.getkist.com/schema.json' }
           ]
         }
       ]
@@ -133,7 +127,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2025-2026 Scape Agency'
+      copyright: 'Copyright © 2025-2026 Scape Press'
     },
 
     search: {

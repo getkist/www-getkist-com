@@ -1,0 +1,101 @@
+# kist
+
+> A lightweight, plugin-based package pipeline processor for JavaScript and
+> TypeScript projects. A build is described in a `kist.yml` file as ordered
+> stages containing steps; each step runs a named action. Steps that declare
+> their inputs are skipped when those inputs have not changed.
+
+kist is not a bundler and not a monorepo task runner. It runs the tools that do
+those jobs, in a defined order, with caching and a watch mode.
+
+## Writing a configuration
+
+The authoritative description of the file format is the JSON Schema at
+https://www.getkist.com/schema.json. Read it before generating a configuration:
+it lists every valid key, its type, its default, and what it does. `kist schema`
+prints the same document from the installed package.
+
+A file that satisfies the schema and names only registered actions is valid.
+Verify one with `npx kist validate`, and inspect what it would do without
+running it with `npx kist --dry=json`, which prints the resolved plan —
+stages, steps, timeouts, and which steps are cacheable — as JSON.
+
+Start a new file with the modeline so editors validate it too:
+
+```yaml
+# yaml-language-server: $schema=https://www.getkist.com/schema.json
+```
+
+## Minimal example
+
+```yaml
+# yaml-language-server: $schema=https://www.getkist.com/schema.json
+options:
+    cache:
+        enabled: true
+
+stages:
+    - name: build
+      steps:
+          - name: clean
+            action: DirectoryCleanAction
+            options:
+                dirPath: "./dist"
+
+          - name: compile
+            action: TypeScriptCompilerAction
+            inputs: ["src/**/*.ts", "tsconfig.json"]
+            outputs: ["dist/**"]
+            options:
+                tsConfigPath: "./tsconfig.json"
+                outputDir: "./dist"
+```
+
+## Rules that are easy to get wrong
+
+- A step with no `inputs` always runs. kist does not infer what a step reads.
+- `hooks` on a stage or step hold functions and cannot be expressed in YAML.
+  They exist only for programmatic use, and the schema rejects them in a file.
+- `action` is the registered action name as a string, such as `FileCopyAction`.
+  Actions from plugins are available once the plugin is installed; nothing needs
+  to be wired up.
+- Stages run concurrently unless `dependsOn` or a concurrency limit orders them.
+  Steps within a stage run in order unless the stage sets `parallel: true`.
+- `options.pipeline.stepTimeout` and `retryStrategy.retries` default to 0, which
+  means no timeout and no retries.
+
+## Core actions
+
+DirectoryCleanAction, DirectoryCopyAction, DirectoryCreateAction,
+FileCopyAction, FileRenameAction, TypeScriptCompilerAction,
+PackageManagerAction, RunScriptAction, VersionWriteAction, DocumentationAction.
+
+`RunScriptAction` runs an arbitrary command and is the escape hatch when no
+action covers what is needed.
+
+## Plugins
+
+Published as `@getkist/action-*` and discovered automatically from
+`node_modules`: action-sass, action-postcss, action-typescript, action-tsup,
+action-tsdown, action-terser, action-eslint, action-prettier, action-jest,
+action-svg, action-nunjucks, action-fantasticon.
+
+## Commands
+
+- `kist` — run the pipeline
+- `kist init [dir]` — write a starter kist.yml (`-t package` for a fuller one)
+- `kist validate` — check the file and that every action it names exists
+- `kist --dry-run` / `kist --dry=json` — print the plan without running it
+- `kist --graph [dot|mermaid]` — print the stage dependency graph
+- `kist schema` — print the JSON Schema
+- `kist clear-cache` — discard cached step results
+
+## Documentation
+
+- Getting started: https://www.getkist.com/guide/getting-started
+- Configuration reference: https://www.getkist.com/guide/configuration
+- Caching: https://www.getkist.com/guide/caching
+- Core actions: https://www.getkist.com/guide/core-actions
+- Writing a plugin: https://www.getkist.com/guide/plugin-development
+- How kist compares to other tools: https://www.getkist.com/guide/comparison
+- Source: https://github.com/getkist/kist

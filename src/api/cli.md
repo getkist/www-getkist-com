@@ -1,226 +1,189 @@
 # CLI Reference
 
-Complete command-line interface documentation for kist.
+Command-line interface documentation for kist.
+
+The kist CLI runs the pipeline described by your config file. It also has a
+handful of commands for creating, inspecting, and checking a pipeline without
+running it.
 
 ## Installation
 
 ```bash
+# As a dev dependency (recommended)
+npm install --save-dev kist
+
 # Global installation
-npm install -g @getkist/kist
+npm install -g kist
 
 # Or use npx
-npx @getkist/kist [command]
+npx kist
 ```
 
-## Commands
+Requires Node.js >= 22.0.0 and npm >= 9.0.0.
 
-### kist run
-
-Run a pipeline defined in `kist.yml`.
+## Usage
 
 ```bash
-kist run <pipeline> [options]
+kist [options] [command]
 ```
 
-#### Arguments
+Running `kist` with no command runs the pipeline. It looks for a config file in
+the current working directory — first `kist.yaml`, then `kist.yml` — then
+discovers plugins, validates the configuration, and executes the stages.
 
-| Argument | Description |
-|----------|-------------|
-| `pipeline` | Name of the pipeline to run |
+### Commands
 
-#### Options
+| Command | Description |
+| ------- | ----------- |
+| `run` | Run the pipeline. This is the default; you can omit it. |
+| `init [directory]` | Write a starter `kist.yml`, including the schema reference your editor uses. |
+| `validate` | Check the configuration and that every action it names is registered. Runs nothing. |
+| `schema` | Print the JSON Schema for `kist.yml`. |
+| `clear-cache` | Delete cached step results. |
 
-| Option | Alias | Description |
-|--------|-------|-------------|
-| `--config` | `-c` | Path to config file (default: `kist.yml`) |
-| `--watch` | `-w` | Watch mode - rebuild on changes |
-| `--verbose` | `-v` | Verbose output |
-| `--quiet` | `-q` | Suppress output |
-| `--stage` | `-s` | Run only a specific stage |
-| `--dry-run` | | Show what would run without executing |
-
-#### Examples
-
-```bash
-# Run the build pipeline
-kist run build
-
-# Run with watch mode
-kist run build --watch
-
-# Run a specific stage
-kist run build --stage compile
-
-# Use a custom config file
-kist run build --config custom.kist.yml
-
-# Dry run to preview
-kist run build --dry-run
-```
-
-### kist init
-
-Initialize a new kist project.
-
-```bash
-kist init [options]
-```
-
-#### Options
+### Options
 
 | Option | Description |
-|--------|-------------|
-| `--template` | Project template to use |
-| `--yes` | Skip prompts and use defaults |
+| ------ | ----------- |
+| `-c, --config <path>` | Use an explicit config file instead of searching the current directory. Errors if the file is not found. |
+| `-l, --log-level <level>` | Lowest severity to print: `debug`, `info`, `warn`, or `error`. Overrides `options.logLevel`. |
+| `-v, --verbose` | Shorthand for `--log-level debug`. |
+| `--live` | Enable live reload (equivalent to `options.live.enabled: true`). |
+| `--no-cache` | Ignore cached results and run every step. |
+| `--dry-run` | Print the execution plan instead of running it. |
+| `--dry <format>` | Print the plan as `text` or `json`. |
+| `--graph [format]` | Print the stage dependency graph as `dot` or `mermaid`. |
+| `-V, --version` | Print the kist version. |
+| `-h, --help` | Show help. Works for any command, e.g. `kist init --help`. |
 
-#### Examples
+Options for `init`:
+
+| Option | Description |
+| ------ | ----------- |
+| `-t, --template <name>` | `minimal` (default) or `package`, a fuller pipeline for publishing an npm package. |
+| `-f, --force` | Overwrite an existing file. |
+
+### Examples
 
 ```bash
-# Interactive initialization
+# Create a starter configuration
 kist init
+kist init -t package
 
-# Quick setup with defaults
-kist init --yes
+# Run the pipeline from ./kist.yaml or ./kist.yml
+kist
 
-# Use a template
-kist init --template typescript
-```
+# Use a specific config file
+kist --config ./config/kist.production.yml
 
-This creates a `kist.yml` file with a basic configuration.
+# See what would run, without running it
+kist --dry-run
 
-### kist list
+# The same plan as JSON, for CI or tooling
+kist --dry json
 
-List available pipelines and actions.
+# The stage graph, ready to paste into a Markdown file
+kist --graph mermaid
 
-```bash
-kist list [type]
-```
-
-#### Arguments
-
-| Argument | Description |
-|----------|-------------|
-| `type` | What to list: `pipelines`, `actions`, or `plugins` |
-
-#### Examples
-
-```bash
-# List all pipelines
-kist list pipelines
-
-# List available actions
-kist list actions
-
-# List loaded plugins
-kist list plugins
-```
-
-### kist validate
-
-Validate the configuration file.
-
-```bash
-kist validate [options]
-```
-
-#### Options
-
-| Option | Description |
-|--------|-------------|
-| `--config` | Path to config file |
-| `--strict` | Fail on warnings |
-
-#### Examples
-
-```bash
-# Validate kist.yml
+# Check the file and that every action it names exists
 kist validate
 
-# Validate with strict mode
-kist validate --strict
+# Run with live reload (serves options.live.root and rebuilds on change)
+kist --live
 
-# Validate a specific file
-kist validate --config production.kist.yml
+# Debug a run
+kist --verbose
 ```
 
-### kist version
+## Inspecting before running
 
-Show version information.
+`--dry-run` answers what would run, in what order, and whether every action it
+names actually exists:
 
-```bash
-kist version
-kist --version
-kist -V
+```
+Plan for /project/kist.yml
+  concurrency: 4 stage(s)   caching: on   halt on failure: yes
+
+  build
+    - compile → TypeScriptCompilerAction  [cacheable]
+    - copy-readme → FileCopyAction
+  publish  [after: build]
+    - pack → PackageManagerAction
 ```
 
-### kist help
+An action that is not registered is reported as `UNKNOWN ACTION` and the command
+exits `1`, so a missing plugin surfaces before the build starts rather than
+midway through it.
 
-Show help information.
+## Configuration File
 
-```bash
-kist help
-kist --help
-kist -h
-
-# Help for a specific command
-kist help run
-kist run --help
-```
-
-## Environment Variables
-
-Environment variables can be used in `kist.yml`:
+The config file drives everything. Minimal example:
 
 ```yaml
-pipeline:
-  build:
-    stages:
-      - name: deploy
-        steps:
-          - action: ShellAction
+options:
+    mode: development
+    logLevel: info
+
+stages:
+    - name: Build
+      steps:
+          - name: CopyLicense
+            action: FileCopyAction
             options:
-              command: deploy --env $&#123;&#123; env.NODE_ENV &#125;&#125;
+                srcFile: "./LICENSE"
+                destDir: "./dist"
 ```
 
-### Setting Environment Variables
+See the [Configuration guide](/guide/configuration) for the full schema (`extends`, `metadata`, `options`, `stages`).
+
+### Multiple Configurations
+
+There are no named pipelines — one config file describes one pipeline. For variants (development vs. production, subprojects), create separate config files, share common parts with `extends`, and select one with `--config`:
+
+```yaml
+# kist.production.yml
+extends: ./kist.yml
+
+options:
+    mode: production
+```
 
 ```bash
-# Single variable
-NODE_ENV=production kist run build
-
-# Multiple variables
-API_KEY=xxx NODE_ENV=production kist run build
-
-# From .env file (using dotenv)
-npx dotenv -- kist run build
+kist --config ./kist.production.yml
 ```
 
-### Built-in Variables
+## Startup Validation
 
-| Variable | Description |
-|----------|-------------|
-| `KIST_CONFIG` | Path to config file |
-| `KIST_CWD` | Current working directory |
-| `KIST_VERBOSE` | Enable verbose mode |
+Before anything runs, kist validates the merged configuration (after plugin discovery, so plugin-provided actions count as registered). Validation fails fast with a clear error for:
+
+- Duplicate stage or step names
+- Stages with empty step lists
+- Steps referencing unregistered action names
+- Unknown or circular `dependsOn` references
+
+## Controlling Log Output
+
+Set the level in the config:
+
+```yaml
+options:
+    logLevel: debug   # debug | info | warn | error (default: info)
+```
+
+`--log-level` overrides it for a single run, and `--verbose` is shorthand for
+`--log-level debug`.
+
+Command output — the plan, the graph, the schema — goes to stdout regardless of
+the log level, so `kist --dry=json > plan.json` produces a clean file.
 
 ## Exit Codes
 
 | Code | Description |
-|------|-------------|
-| `0` | Success |
-| `1` | General error |
-| `2` | Configuration error |
-| `3` | Action error |
-| `130` | Interrupted (Ctrl+C) |
+| ---- | ----------- |
+| `0` | Pipeline completed successfully |
+| `1` | Any failure: config not found or invalid, unknown action, or a failing action |
 
-## Configuration Files
-
-kist looks for configuration in this order:
-
-1. `--config` option
-2. `kist.yml` in current directory
-3. `kist.yaml` in current directory
-4. `.kist/config.yml`
+With `options.haltOnFailure: false`, step failures are logged, the pipeline continues, and kist exits `0`.
 
 ## CI/CD Usage
 
@@ -236,74 +199,72 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci
-      - run: npx kist run build
+      # Carry the step cache between runs so unchanged steps are skipped.
+      - uses: actions/cache@v4
+        with:
+          path: .kist-cache
+          key: kist-${{ runner.os }}-${{ hashFiles('src/**', 'kist.yml') }}
+          restore-keys: |
+            kist-${{ runner.os }}-
+      - run: npx kist
 ```
+
+See [Caching](/guide/caching) for what the cache key covers and when sharing it
+is worth the download.
 
 ### GitLab CI
 
 ```yaml
 build:
-  image: node:20
+  image: node:22
   script:
     - npm ci
-    - npx kist run build
-```
-
-### Jenkins
-
-```groovy
-pipeline {
-    agent { docker { image 'node:20' } }
-    stages {
-        stage('Build') {
-            steps {
-                sh 'npm ci'
-                sh 'npx kist run build'
-            }
-        }
-    }
-}
+    - npx kist
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### Command not found
 
-**Command not found**
 ```bash
 # Use npx if not installed globally
-npx @getkist/kist run build
+npx kist
 ```
 
-**Config not found**
+### Config not found
+
 ```bash
-# Specify config path explicitly
-kist run build --config ./config/kist.yml
+# kist searches only for kist.yaml / kist.yml in the current directory;
+# point it at other files explicitly
+kist --config ./config/kist.yml
 ```
 
-**Plugin not loading**
+### Plugin not loading
+
 ```bash
-# Ensure plugin is installed
+# Plugins are auto-discovered from node_modules; ensure the package is installed
 npm ls @getkist/action-sass
 
-# Check verbose output
-kist run build --verbose
+# Check verbose output for the plugin discovery log
+kist --verbose
 ```
 
-### Debug Mode
+If a step names an action that moved out of the core package, the error says
+which package to install. If the name is close to a registered one, it suggests
+the correction.
+
+### Checking a configuration without running it
 
 ```bash
-# Enable debug logging
-DEBUG=kist:* kist run build
-
-# Or use verbose flag
-kist run build --verbose
+kist validate
 ```
 
 ## Next Steps
 
 - [API Reference](/api/) - Programmatic usage
 - [Configuration](/guide/configuration) - YAML reference
+- [Editor setup](/guide/editor-setup) - Completion and validation in your editor
+- [Caching](/guide/caching) - Skipping work that has not changed
 - [Plugins](/plugins/) - Available plugins
