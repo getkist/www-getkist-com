@@ -1,6 +1,6 @@
 # @getkist/action-postcss
 
-PostCSS processing with autoprefixer, cssnano, and custom plugins.
+PostCSS processing with autoprefixer and cssnano.
 
 ## Installation
 
@@ -8,130 +8,112 @@ PostCSS processing with autoprefixer, cssnano, and custom plugins.
 npm install --save-dev @getkist/action-postcss
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
+
 ## Actions
 
 ### PostCssAction
 
-Processes CSS files with PostCSS.
+Processes a CSS file with PostCSS: optional autoprefixing, optional cssnano minification, and optional source maps.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `inputFile` | `string` | Required | Path to input CSS file |
-| `outputFile` | `string` | Required | Path to output CSS file |
-| `plugins` | `array` | `[]` | PostCSS plugins to use |
-| `sourceMap` | `boolean` | `false` | Generate source maps |
-| `config` | `string` | - | Path to postcss.config.js |
+| --- | --- | --- | --- |
+| `inputPath` | `string` | Required | Path to the input CSS file |
+| `outputPath` | `string` | Required | Path to the output CSS file (parent directories are created) |
+| `autoprefixer` | `boolean` | `true` | Add vendor prefixes with autoprefixer |
+| `browsers` | `string[]` | `["> 1%", "last 2 versions", "not dead"]` | Browserslist queries used by autoprefixer |
+| `minify` | `boolean` | `false` | Minify with cssnano |
+| `cssnanoPreset` | `string` | `"default"` | cssnano preset: `"default"`, `"lite"`, or `"advanced"` |
+| `sourcemap` | `boolean` | `false` | Generate a source map |
+| `inlineSourcemap` | `boolean` | `false` | Embed the map inline instead of writing a separate `.map` file |
+
+Additional PostCSS plugins can be supplied via the `plugins` option when the action is used programmatically (it takes plugin instances, so it is not configurable from YAML).
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-postcss
-
-pipeline:
-  build:
-    stages:
-      - name: styles
-        steps:
-          - action: PostCssAction
+stages:
+    - name: Styles
+      steps:
+          - name: PrefixStyles
+            action: PostCssAction
             options:
-              inputFile: src/css/main.css
-              outputFile: dist/css/main.css
-              plugins:
-                - autoprefixer
+                inputPath: ./src/css/main.css
+                outputPath: ./dist/css/main.css
 ```
 
-#### With Multiple Plugins
+#### Minified Output with Source Maps
 
 ```yaml
-- action: PostCssAction
-  options:
-    inputFile: src/css/main.css
-    outputFile: dist/css/main.min.css
-    sourceMap: true
-    plugins:
-      - autoprefixer
-      - cssnano
+stages:
+    - name: Styles
+      steps:
+          - name: MinifyStyles
+            action: PostCssAction
+            options:
+                inputPath: ./src/css/main.css
+                outputPath: ./dist/css/main.min.css
+                minify: true
+                cssnanoPreset: default
+                sourcemap: true
 ```
 
-#### Using postcss.config.js
-
-Create a `postcss.config.js` in your project:
-
-```javascript
-module.exports = {
-  plugins: {
-    'postcss-import': {},
-    'tailwindcss': {},
-    'autoprefixer': {},
-    'cssnano': {
-      preset: ['default', { discardComments: { removeAll: true } }]
-    }
-  }
-}
-```
-
-Then reference it:
+#### Custom Browser Targets
 
 ```yaml
-- action: PostCssAction
-  options:
-    inputFile: src/css/main.css
-    outputFile: dist/css/main.css
-    config: postcss.config.js
+stages:
+    - name: Styles
+      steps:
+          - name: PrefixStyles
+            action: PostCssAction
+            options:
+                inputPath: ./src/css/main.css
+                outputPath: ./dist/css/main.css
+                autoprefixer: true
+                browsers:
+                    - "> 0.5%"
+                    - "last 3 versions"
+                    - "not dead"
 ```
 
 ## After SCSS Compilation
 
-Chain with `@getkist/action-sass`:
+Chain with [@getkist/action-sass](/plugins/action-sass):
 
 ```yaml
-plugins:
-  - @getkist/action-sass
-  - @getkist/action-postcss
+stages:
+    - name: Styles
+      steps:
+          - name: CompileScss
+            action: StyleProcessingAction
+            options:
+                inputFile: ./src/styles/main.scss
+                outputFile: ./tmp/main.css
+                styleOption: expanded
 
-pipeline:
-  build:
-    stages:
-      - name: styles
-        steps:
-          - action: StyleProcessingAction
+          - name: PostProcess
+            action: PostCssAction
             options:
-              inputFile: src/styles/main.scss
-              outputFile: tmp/main.css
-              
-          - action: PostCssAction
-            options:
-              inputFile: tmp/main.css
-              outputFile: dist/css/main.css
-              plugins:
-                - autoprefixer
-                - cssnano
+                inputPath: ./tmp/main.css
+                outputPath: ./dist/css/main.css
+                autoprefixer: true
+                minify: true
 ```
 
-## Supported Plugins
+## Bundled Transformations
 
-Any PostCSS plugin can be used. Common ones:
+The action ships with its own PostCSS pipeline:
 
-| Plugin | Description |
-|--------|-------------|
-| `autoprefixer` | Add vendor prefixes |
-| `cssnano` | Minify CSS |
-| `postcss-import` | Inline @import rules |
-| `tailwindcss` | Tailwind CSS |
-| `postcss-preset-env` | Modern CSS features |
+| Transform | Option | Description |
+| --- | --- | --- |
+| autoprefixer | `autoprefixer` | Add vendor prefixes per `browsers` |
+| cssnano | `minify` | Minify CSS, tuned by `cssnanoPreset` |
 
-::: tip Installing PostCSS Plugins
-PostCSS plugins must be installed separately:
-```bash
-npm install --save-dev autoprefixer cssnano
-```
-:::
+Plugin warnings (for example from a misconfigured transform) are logged individually rather than failing the step.
 
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-postcss)
-- [GitHub](https://github.com/getkist/action-postcss)
-- [Changelog](https://github.com/getkist/action-postcss/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-postcss)

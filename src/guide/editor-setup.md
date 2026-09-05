@@ -43,6 +43,28 @@ to `.vscode/settings.json`:
 }
 ```
 
+#### The kist extension
+
+There is also a [kist extension](https://github.com/getkist/kist-vscode) for the
+things a schema cannot do:
+
+- **Action completion from your installed plugins.** Which actions exist depends
+  on which packages are in `node_modules`; the schema has no way to know. Typing
+  after `action:` completes from kist's own actions plus every installed plugin,
+  labelled with the package that provides each one.
+- **A warning when a step names an action nothing provides.** A file can be
+  entirely valid against the schema and still reference an action you have not
+  installed. That otherwise surfaces only when the pipeline reaches the step.
+- **Undefined stage dependencies and cycles.** The schema validates shape, not
+  cross-references, so a `dependsOn` pointing at a renamed stage passes it.
+- **A pipeline graph.** *kist: Show pipeline graph* draws the stages and their
+  dependencies beside the editor, from the buffer as it stands — so it works on
+  a file that does not run yet.
+- **The schema applied without a modeline**, from a copy bundled in the
+  extension, so validation needs neither the network nor a `.vscode/settings.json`.
+
+It complements the YAML extension rather than replacing it; keep both.
+
 ### Neovim
 
 With `yamlls` configured through `nvim-lspconfig`, the modeline works as-is. To

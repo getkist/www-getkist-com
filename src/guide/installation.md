@@ -4,25 +4,10 @@ Multiple ways to install and use kist in your projects.
 
 ## Prerequisites
 
-- **Node.js** 20.0.0 or higher
-- **npm**, **yarn**, or **pnpm**
+- **Node.js** 22.0.0 or higher
+- **npm** 9.0.0 or higher (or **yarn** / **pnpm**)
 
-## Global Installation
-
-Install kist globally to use the CLI from anywhere:
-
-```bash
-npm install -g kist
-```
-
-Verify the installation:
-
-```bash
-kist --version
-# Output: 0.1.62
-```
-
-## Project Installation
+## Project Installation (recommended)
 
 Install kist as a development dependency in your project:
 
@@ -44,16 +29,32 @@ yarn add -D kist
 pnpm add -D kist
 ```
 
+## Global Installation
+
+You can also install kist globally to use the CLI from anywhere:
+
+```bash
+npm install -g kist
+```
+
+Verify the installation by running kist in a project that has a `kist.yaml` or `kist.yml`:
+
+```bash
+kist
+```
+
+kist finds the config file in the current directory and runs the pipeline. Use `--config <path>` to point at a different file.
+
 ## Installing Plugins
 
-Install official action plugins as needed:
+Install official action plugins as needed — kist discovers them automatically from `node_modules`, so no configuration is required:
 
 ```bash
 # Style processing
 npm install --save-dev @getkist/action-sass @getkist/action-postcss
 
-# TypeScript & bundling
-npm install --save-dev @getkist/action-typescript @getkist/action-tsup
+# Bundling
+npm install --save-dev @getkist/action-tsup @getkist/action-terser
 
 # Code quality
 npm install --save-dev @getkist/action-eslint @getkist/action-prettier
@@ -61,9 +62,11 @@ npm install --save-dev @getkist/action-eslint @getkist/action-prettier
 # Testing
 npm install --save-dev @getkist/action-jest
 
-# Assets
+# Assets & templates
 npm install --save-dev @getkist/action-svg @getkist/action-nunjucks
 ```
+
+See [Available Plugins](/plugins/) for the full list.
 
 ## Using npx
 
@@ -107,6 +110,8 @@ npm update -g kist
 npm update kist
 ```
 
+kist is under active 0.x development, so review the [changelog](https://github.com/getkist/kist/blob/main/CHANGELOG.md) when updating.
+
 ## Troubleshooting
 
 ### Permission Issues (macOS/Linux)
@@ -123,21 +128,18 @@ source ~/.bashrc
 
 ### Node Version
 
-Ensure you're using Node.js 20+:
+Ensure you're using Node.js 22 or higher:
 
 ```bash
 node --version
-# Should be v20.x.x or higher
+# Should be v22.x.x or higher
 ```
 
 Consider using [nvm](https://github.com/nvm-sh/nvm) to manage Node versions:
 
 ```bash
-nvm install 20
-nvm use 20
-```
-```bash
-npm run build
+nvm install 22
+nvm use 22
 ```
 
 ## Verification
@@ -145,7 +147,7 @@ npm run build
 After installation, verify that the package is correctly installed:
 
 ```bash
-npm list @getkist/[project-name]
+npm list kist
 ```
 
 ## Next Steps

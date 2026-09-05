@@ -7,4 +7,4 @@
 </header>
 <br/>
 
-**pack.gl** is an open-source project by [Scape Agency](https://www.scape.agency "Scape Agency website").
+**pack.gl** is an open-source project by [Scape Press](https://www.scape.press "Scape Press website").

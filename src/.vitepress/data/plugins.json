@@ -1,0 +1,132 @@
+[
+  {
+    "name": "@getkist/action-sass",
+    "category": "styles",
+    "summary": "Compile SCSS/Sass to CSS, with PostCSS processing and source maps.",
+    "actions": ["StyleProcessingAction"],
+    "keywords": ["sass", "scss", "css", "styles", "postcss"],
+    "docs": "/plugins/action-sass",
+    "npm": "https://www.npmjs.com/package/@getkist/action-sass",
+    "repo": "https://github.com/getkist/kist-action-sass"
+  },
+  {
+    "name": "@getkist/action-postcss",
+    "category": "styles",
+    "summary": "Run a PostCSS pipeline — autoprefixer, cssnano, or any plugin you configure.",
+    "actions": ["PostCssAction"],
+    "keywords": ["postcss", "css", "autoprefixer", "cssnano", "styles"],
+    "docs": "/plugins/action-postcss",
+    "npm": "https://www.npmjs.com/package/@getkist/action-postcss",
+    "repo": "https://github.com/getkist/kist-action-postcss"
+  },
+  {
+    "name": "@getkist/action-typescript",
+    "category": "build",
+    "summary": "Compile TypeScript from a tsconfig.json.",
+    "actions": ["TypeScriptCompilerAction"],
+    "keywords": ["typescript", "tsc", "compile", "types"],
+    "docs": "/plugins/action-typescript",
+    "npm": "https://www.npmjs.com/package/@getkist/action-typescript",
+    "repo": "https://github.com/getkist/kist-action-typescript"
+  },
+  {
+    "name": "@getkist/action-tsup",
+    "category": "build",
+    "summary": "Bundle with tsup, the esbuild-backed bundler.",
+    "actions": ["BundleAction"],
+    "keywords": ["tsup", "esbuild", "bundle", "bundler", "typescript"],
+    "docs": "/plugins/action-tsup",
+    "npm": "https://www.npmjs.com/package/@getkist/action-tsup",
+    "repo": "https://github.com/getkist/kist-action-tsup"
+  },
+  {
+    "name": "@getkist/action-tsdown",
+    "category": "build",
+    "summary": "Bundle with tsdown, the Rolldown-backed successor to tsup.",
+    "actions": ["TsdownAction"],
+    "keywords": ["tsdown", "rolldown", "bundle", "bundler", "typescript"],
+    "docs": "/plugins/action-tsdown",
+    "npm": "https://www.npmjs.com/package/@getkist/action-tsdown",
+    "repo": "https://github.com/getkist/kist-action-tsdown"
+  },
+  {
+    "name": "@getkist/action-terser",
+    "category": "build",
+    "summary": "Minify JavaScript with Terser.",
+    "actions": ["JavaScriptMinifyAction"],
+    "keywords": ["terser", "minify", "uglify", "javascript", "compress"],
+    "docs": "/plugins/action-terser",
+    "npm": "https://www.npmjs.com/package/@getkist/action-terser",
+    "repo": "https://github.com/getkist/kist-action-terser"
+  },
+  {
+    "name": "@getkist/action-eslint",
+    "category": "quality",
+    "summary": "Lint with ESLint, optionally applying its auto-fixes.",
+    "actions": ["LintAction"],
+    "keywords": ["eslint", "lint", "linting", "quality", "static analysis"],
+    "docs": "/plugins/action-eslint",
+    "npm": "https://www.npmjs.com/package/@getkist/action-eslint",
+    "repo": "https://github.com/getkist/kist-action-eslint"
+  },
+  {
+    "name": "@getkist/action-prettier",
+    "category": "quality",
+    "summary": "Format sources with Prettier, or check that they are already formatted.",
+    "actions": ["PrettierAction"],
+    "keywords": ["prettier", "format", "formatting", "style", "quality"],
+    "docs": "/plugins/action-prettier",
+    "npm": "https://www.npmjs.com/package/@getkist/action-prettier",
+    "repo": "https://github.com/getkist/kist-action-prettier"
+  },
+  {
+    "name": "@getkist/action-jest",
+    "category": "quality",
+    "summary": "Run a Jest suite as a pipeline step, with coverage.",
+    "actions": ["JestAction"],
+    "keywords": ["jest", "test", "testing", "coverage", "quality"],
+    "docs": "/plugins/action-jest",
+    "npm": "https://www.npmjs.com/package/@getkist/action-jest",
+    "repo": "https://github.com/getkist/kist-action-jest"
+  },
+  {
+    "name": "@getkist/action-svg",
+    "category": "assets",
+    "summary": "Read, optimise, and package SVGs — sprites, symbol sets, and PNG conversion.",
+    "actions": ["SvgSpriteAction", "SvgReaderAction", "SvgPackagerAction", "SvgToPngAction"],
+    "keywords": ["svg", "sprite", "icons", "svgo", "png", "assets"],
+    "docs": "/plugins/action-svg",
+    "npm": "https://www.npmjs.com/package/@getkist/action-svg",
+    "repo": "https://github.com/getkist/kist-action-svg"
+  },
+  {
+    "name": "@getkist/action-nunjucks",
+    "category": "assets",
+    "summary": "Render Nunjucks/Jinja templates, one file or a whole directory.",
+    "actions": ["TemplateRenderAction"],
+    "keywords": ["nunjucks", "jinja", "template", "html", "render"],
+    "docs": "/plugins/action-nunjucks",
+    "npm": "https://www.npmjs.com/package/@getkist/action-nunjucks",
+    "repo": "https://github.com/getkist/kist-action-nunjucks"
+  },
+  {
+    "name": "@getkist/action-fantasticon",
+    "category": "assets",
+    "summary": "Generate an icon font and its stylesheet from a directory of SVGs.",
+    "actions": ["FantasticonAction"],
+    "keywords": ["fantasticon", "icon font", "webfont", "icons", "assets"],
+    "docs": "/plugins/action-fantasticon",
+    "npm": "https://www.npmjs.com/package/@getkist/action-fantasticon",
+    "repo": "https://github.com/getkist/kist-action-fantasticon"
+  },
+  {
+    "name": "@getkist/action-example",
+    "category": "reference",
+    "summary": "A working plugin with nothing to learn from but its shape — copy it to start your own.",
+    "actions": ["ExampleAction"],
+    "keywords": ["example", "template", "starter", "scaffold", "reference"],
+    "docs": "/guide/plugin-development",
+    "npm": "https://www.npmjs.com/package/@getkist/action-example",
+    "repo": "https://github.com/getkist/kist-action-template"
+  }
+]

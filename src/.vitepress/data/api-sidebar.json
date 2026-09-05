@@ -1,0 +1,174 @@
+[
+  {
+    "text": "Classes",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Action",
+        "link": "/api/reference/classes/Action"
+      },
+      {
+        "text": "ActionError",
+        "link": "/api/reference/classes/ActionError"
+      },
+      {
+        "text": "ActionRegistry",
+        "link": "/api/reference/classes/ActionRegistry"
+      },
+      {
+        "text": "BuildError",
+        "link": "/api/reference/classes/BuildError"
+      },
+      {
+        "text": "CLIError",
+        "link": "/api/reference/classes/CLIError"
+      },
+      {
+        "text": "ConfigError",
+        "link": "/api/reference/classes/ConfigError"
+      },
+      {
+        "text": "ConfigNotFoundError",
+        "link": "/api/reference/classes/ConfigNotFoundError"
+      },
+      {
+        "text": "ConfigParseError",
+        "link": "/api/reference/classes/ConfigParseError"
+      },
+      {
+        "text": "ConfigValidationError",
+        "link": "/api/reference/classes/ConfigValidationError"
+      },
+      {
+        "text": "DirectoryNotFoundError",
+        "link": "/api/reference/classes/DirectoryNotFoundError"
+      },
+      {
+        "text": "FileNotFoundError",
+        "link": "/api/reference/classes/FileNotFoundError"
+      },
+      {
+        "text": "FileSystemError",
+        "link": "/api/reference/classes/FileSystemError"
+      },
+      {
+        "text": "InvalidArgumentError",
+        "link": "/api/reference/classes/InvalidArgumentError"
+      },
+      {
+        "text": "Kist",
+        "link": "/api/reference/classes/Kist"
+      },
+      {
+        "text": "KistError",
+        "link": "/api/reference/classes/KistError"
+      },
+      {
+        "text": "MissingArgumentError",
+        "link": "/api/reference/classes/MissingArgumentError"
+      },
+      {
+        "text": "PathTraversalError",
+        "link": "/api/reference/classes/PathTraversalError"
+      },
+      {
+        "text": "PermissionError",
+        "link": "/api/reference/classes/PermissionError"
+      },
+      {
+        "text": "PluginError",
+        "link": "/api/reference/classes/PluginError"
+      },
+      {
+        "text": "PluginInitError",
+        "link": "/api/reference/classes/PluginInitError"
+      },
+      {
+        "text": "PluginManager",
+        "link": "/api/reference/classes/PluginManager"
+      },
+      {
+        "text": "PluginNotFoundError",
+        "link": "/api/reference/classes/PluginNotFoundError"
+      },
+      {
+        "text": "ResourceLimitError",
+        "link": "/api/reference/classes/ResourceLimitError"
+      },
+      {
+        "text": "StageError",
+        "link": "/api/reference/classes/StageError"
+      },
+      {
+        "text": "StepError",
+        "link": "/api/reference/classes/StepError"
+      },
+      {
+        "text": "TimeoutError",
+        "link": "/api/reference/classes/TimeoutError"
+      }
+    ]
+  },
+  {
+    "text": "Interfaces",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "ActionInterface",
+        "link": "/api/reference/interfaces/ActionInterface"
+      },
+      {
+        "text": "ActionOptionsType",
+        "link": "/api/reference/interfaces/ActionOptionsType"
+      },
+      {
+        "text": "ActionPlugin",
+        "link": "/api/reference/interfaces/ActionPlugin"
+      },
+      {
+        "text": "PluginMetadata",
+        "link": "/api/reference/interfaces/PluginMetadata"
+      }
+    ]
+  },
+  {
+    "text": "Type aliases",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "CoreActionName",
+        "link": "/api/reference/type-aliases/CoreActionName"
+      },
+      {
+        "text": "ErrorCode",
+        "link": "/api/reference/type-aliases/ErrorCode"
+      },
+      {
+        "text": "MigratedActionName",
+        "link": "/api/reference/type-aliases/MigratedActionName"
+      }
+    ]
+  },
+  {
+    "text": "Variables",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "CORE_ACTIONS",
+        "link": "/api/reference/variables/CORE_ACTIONS"
+      },
+      {
+        "text": "ErrorCodes",
+        "link": "/api/reference/variables/ErrorCodes"
+      },
+      {
+        "text": "MIGRATED_ACTIONS",
+        "link": "/api/reference/variables/MIGRATED_ACTIONS"
+      },
+      {
+        "text": "MIGRATED_PACKAGES",
+        "link": "/api/reference/variables/MIGRATED_PACKAGES"
+      }
+    ]
+  }
+]

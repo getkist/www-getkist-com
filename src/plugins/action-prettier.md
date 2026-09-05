@@ -1,6 +1,6 @@
 # @getkist/action-prettier
 
-Prettier code formatting with check and write modes.
+Prettier code formatting with write and check modes.
 
 ## Installation
 
@@ -8,60 +8,102 @@ Prettier code formatting with check and write modes.
 npm install --save-dev @getkist/action-prettier
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
+
 ## Actions
 
 ### PrettierAction
 
-Formats code using Prettier.
+Formats code using Prettier, or checks that it is already formatted.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `files` | `string[]` | Required | Glob patterns for files to format |
-| `config` | `string` | Auto-detected | Path to Prettier config |
-| `check` | `boolean` | `false` | Check formatting without writing |
-| `write` | `boolean` | `false` | Write formatted files |
-| `ignorePath` | `string` | `.prettierignore` | Path to ignore file |
+| --- | --- | --- | --- |
+| `targetFiles` | `string[]` | Required | Files to format (direct file paths; see note below) |
+| `write` | `boolean` | `true` | Write formatted files to disk; `false` = check mode, which fails if any file needs formatting |
+| `configPath` | `string` | - | Path to a Prettier config file to resolve options from |
+| `tabWidth` | `number` | Prettier default (`2`) | Tab width for indentation |
+| `useTabs` | `boolean` | Prettier default (`false`) | Use tabs instead of spaces |
+| `semi` | `boolean` | Prettier default (`true`) | Print semicolons |
+| `singleQuote` | `boolean` | Prettier default (`false`) | Use single quotes |
+| `trailingComma` | `string` | Prettier default (`"all"`) | `"all"`, `"es5"`, or `"none"` |
+| `bracketSpacing` | `boolean` | Prettier default (`true`) | Spaces between brackets in object literals |
+| `bracketSameLine` | `boolean` | Prettier default (`false`) | Closing bracket on the same line as the last attribute |
+| `arrowParens` | `string` | Prettier default (`"always"`) | `"always"` or `"avoid"` |
+| `printWidth` | `number` | Prettier default (`80`) | Line width to wrap on |
+| `htmlWhitespaceSensitivity` | `string` | Prettier default (`"css"`) | `"css"`, `"strict"`, or `"ignore"` |
+| `endOfLine` | `string` | Prettier default (`"lf"`) | `"lf"`, `"crlf"`, `"cr"`, or `"auto"` |
+| `parser` | `string` | Auto-detected per file | Force a specific parser |
+| `ignoreUnknown` | `boolean` | `false` | Skip files whose parser cannot be inferred instead of erroring |
+
+Style options set here override values resolved from `configPath`.
+
+::: warning Direct file paths only
+`targetFiles` entries are resolved as direct file paths. Glob patterns and directories are currently not expanded - they are skipped with a warning.
+:::
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-prettier
-
-pipeline:
-  format:
-    stages:
-      - name: format
-        steps:
-          - action: PrettierAction
+stages:
+    - name: Format
+      steps:
+          - name: FormatSources
+            action: PrettierAction
             options:
-              files:
-                - "src/**/*.ts"
-                - "src/**/*.js"
-              write: true
+                targetFiles:
+                    - "src/index.ts"
+                    - "src/utils/helpers.ts"
+                write: true
 ```
 
 #### Check Mode (CI)
 
-Fail if files aren't formatted:
+Fail if files aren't formatted, without modifying them:
 
 ```yaml
-- action: PrettierAction
-  options:
-    files: ["src/**/*.ts"]
-    check: true
+stages:
+    - name: FormatCheck
+      steps:
+          - name: CheckFormatting
+            action: PrettierAction
+            options:
+                targetFiles:
+                    - "src/index.ts"
+                write: false
 ```
 
 #### Custom Config
 
 ```yaml
-- action: PrettierAction
-  options:
-    files: ["src/**/*.ts"]
-    config: .prettierrc
-    write: true
+stages:
+    - name: Format
+      steps:
+          - name: FormatSources
+            action: PrettierAction
+            options:
+                targetFiles:
+                    - "src/index.ts"
+                configPath: .prettierrc
+                write: true
+```
+
+#### Inline Style Options
+
+```yaml
+stages:
+    - name: Format
+      steps:
+          - name: FormatSources
+            action: PrettierAction
+            options:
+                targetFiles:
+                    - "src/index.ts"
+                write: true
+                singleQuote: true
+                semi: false
+                trailingComma: all
 ```
 
 ## Prettier Configuration
@@ -78,24 +120,11 @@ Fail if files aren't formatted:
 }
 ```
 
-### JavaScript Config (prettier.config.js)
-
-```javascript
-export default {
-  semi: true,
-  singleQuote: true,
-  tabWidth: 2,
-  trailingComma: 'es5',
-  printWidth: 80,
-  plugins: ['prettier-plugin-organize-imports']
-};
-```
-
 ## Ignore Files
 
-Create `.prettierignore`:
+Files matched by `.prettierignore` are skipped:
 
-```
+```text
 dist/
 node_modules/
 coverage/
@@ -107,57 +136,21 @@ coverage/
 Run ESLint first, then Prettier:
 
 ```yaml
-plugins:
-  - @getkist/action-eslint
-  - @getkist/action-prettier
-
-pipeline:
-  format:
-    stages:
-      - name: quality
-        steps:
-          - action: LintAction
+stages:
+    - name: Quality
+      steps:
+          - name: LintSources
+            action: LintAction
             options:
-              files: ["src/**/*.ts"]
-              fix: true
-              
-          - action: PrettierAction
+                targetFiles: ["src/**/*.ts"]
+                fix: true
+
+          - name: FormatSources
+            action: PrettierAction
             options:
-              files: ["src/**/*.ts"]
-              write: true
-```
-
-## CI/CD Pipeline
-
-Check formatting in CI:
-
-```yaml
-pipeline:
-  ci:
-    stages:
-      - name: format-check
-        steps:
-          - action: PrettierAction
-            options:
-              files:
-                - "src/**/*.ts"
-                - "src/**/*.js"
-                - "**/*.json"
-                - "**/*.md"
-              check: true
-```
-
-## Development Workflow
-
-Format on save in `package.json`:
-
-```json
-{
-  "scripts": {
-    "format": "kist run format",
-    "format:check": "kist run format:check"
-  }
-}
+                targetFiles:
+                    - "src/index.ts"
+                write: true
 ```
 
 ## Supported File Types
@@ -175,5 +168,4 @@ Prettier supports many file types out of the box:
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-prettier)
-- [GitHub](https://github.com/getkist/action-prettier)
-- [Changelog](https://github.com/getkist/action-prettier/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-prettier)

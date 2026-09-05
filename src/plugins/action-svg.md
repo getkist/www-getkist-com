@@ -8,53 +8,47 @@ SVG processing, sprite generation, and PNG conversion.
 npm install --save-dev @getkist/action-svg
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The actions below become available to your pipeline steps by name.
+
 ## Actions
 
 This plugin provides four actions for different SVG workflows.
 
 ### SvgSpriteAction
 
-Creates SVG sprite sheets from individual SVG files.
+Creates SVG sprite sheets from individual SVG files using [svg-sprite](https://github.com/svg-sprite/svg-sprite).
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `inputDir` | `string` | Required | Directory containing SVGs |
-| `outputDir` | `string` | Required | Output directory |
-| `spriteFilename` | `string` | `"sprite.svg"` | Output filename |
-| `prefix` | `string` | `"icon-"` | ID prefix for symbols |
-| `optimize` | `boolean` | `true` | Optimize SVGs |
+| --- | --- | --- | --- |
+| `sourceDir` | `string` | Required | Directory containing SVG files |
+| `outputDir` | `string` | Required | Output directory for the generated sprite |
+| `config` | `object` | - | Custom svg-sprite configuration |
 
 #### Usage
 
 ```yaml
-plugins:
-  - @getkist/action-svg
-
-pipeline:
-  build:
-    stages:
-      - name: icons
-        steps:
-          - action: SvgSpriteAction
+stages:
+    - name: Icons
+      steps:
+          - name: BuildSprite
+            action: SvgSpriteAction
             options:
-              inputDir: src/icons
-              outputDir: dist/sprites
-              spriteFilename: icons.sprite.svg
-              prefix: "icon-"
+                sourceDir: ./src/icons
+                outputDir: ./dist/sprites
 ```
 
 #### Output
 
-Creates a sprite file:
+Creates a sprite file with one `<symbol>` per source SVG:
 
 ```xml
 <svg xmlns="http://www.w3.org/2000/svg">
-  <symbol id="icon-arrow" viewBox="0 0 24 24">
+  <symbol id="arrow" viewBox="0 0 24 24">
     <path d="..."/>
   </symbol>
-  <symbol id="icon-close" viewBox="0 0 24 24">
+  <symbol id="close" viewBox="0 0 24 24">
     <path d="..."/>
   </symbol>
 </svg>
@@ -64,7 +58,7 @@ Use in HTML:
 
 ```html
 <svg class="icon">
-  <use href="/sprites/icons.sprite.svg#icon-arrow"></use>
+  <use href="/sprites/sprite.svg#arrow"></use>
 </svg>
 ```
 
@@ -72,76 +66,85 @@ Use in HTML:
 
 ### SvgReaderAction
 
-Reads and parses SVG files.
+Reads an SVG file (useful for verifying it exists and parses).
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `inputFile` | `string` | Required | Path to SVG file |
-| `outputKey` | `string` | `"svgContent"` | Context key for output |
+| --- | --- | --- | --- |
+| `filePath` | `string` | Required | Path to the SVG file to read |
 
 #### Usage
 
 ```yaml
-- action: SvgReaderAction
-  options:
-    inputFile: src/logo.svg
-    outputKey: logoSvg
+stages:
+    - name: Icons
+      steps:
+          - name: ReadLogo
+            action: SvgReaderAction
+            options:
+                filePath: ./src/logo.svg
 ```
 
 ---
 
 ### SvgPackagerAction
 
-Packages multiple SVGs into different formats.
+Optimizes SVGs with SVGO and packages them as optimized SVG files, TypeScript modules, and a JSON index.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `inputDir` | `string` | Required | Directory containing SVGs |
-| `outputDir` | `string` | Required | Output directory |
-| `formats` | `string[]` | `["json"]` | Output formats |
+| --- | --- | --- | --- |
+| `inputDirectory` | `string` | `"src/icons"` | Directory containing SVG files |
+| `outputDirectory` | `string` | `"dist/icons"` | Output directory for optimized SVG files |
+| `tsOutputDirectory` | `string` | `"dist/ts"` | Output directory for TypeScript files |
+| `jsonOutputDirectory` | `string` | `"dist"` | Output directory for the JSON index |
+| `svgoConfigPath` | `string` | `"./config/svgo.config.js"` | Path to an SVGO configuration file |
 
 #### Usage
 
 ```yaml
-- action: SvgPackagerAction
-  options:
-    inputDir: src/icons
-    outputDir: dist/icons
-    formats:
-      - json
-      - esm
+stages:
+    - name: Icons
+      steps:
+          - name: PackageIcons
+            action: SvgPackagerAction
+            options:
+                inputDirectory: ./src/icons
+                outputDirectory: ./dist/icons
+                tsOutputDirectory: ./dist/ts
+                jsonOutputDirectory: ./dist
 ```
 
 ---
 
 ### SvgToPngAction
 
-Converts SVG files to PNG.
+Converts SVG content to a PNG file.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `inputFile` | `string` | Required | Path to SVG file |
-| `outputFile` | `string` | Required | Path to output PNG |
-| `width` | `number` | - | Output width |
-| `height` | `number` | - | Output height |
-| `scale` | `number` | `1` | Scale factor |
-| `background` | `string` | `"transparent"` | Background color |
+| --- | --- | --- | --- |
+| `svgContent` | `string` | Required | SVG markup to convert (the SVG content itself, not a file path) |
+| `outputPath` | `string` | Required | Path to the output PNG |
+| `width` | `number` | - | Output width in pixels |
+| `height` | `number` | - | Output height in pixels |
 
 #### Usage
 
 ```yaml
-- action: SvgToPngAction
-  options:
-    inputFile: src/logo.svg
-    outputFile: dist/logo.png
-    width: 512
-    height: 512
+stages:
+    - name: Favicons
+      steps:
+          - name: RenderIcon
+            action: SvgToPngAction
+            options:
+                svgContent: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="..."/></svg>'
+                outputPath: ./dist/favicon-32.png
+                width: 32
+                height: 32
 ```
 
 #### Multiple Sizes
@@ -149,73 +152,49 @@ Converts SVG files to PNG.
 Generate multiple favicon sizes:
 
 ```yaml
-pipeline:
-  build:
-    stages:
-      - name: favicons
-        steps:
-          - action: SvgToPngAction
+stages:
+    - name: Favicons
+      steps:
+          - name: Favicon16
+            action: SvgToPngAction
             options:
-              inputFile: src/icon.svg
-              outputFile: dist/favicon-16.png
-              width: 16
-              height: 16
-              
-          - action: SvgToPngAction
+                svgContent: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="..."/></svg>'
+                outputPath: ./dist/favicon-16.png
+                width: 16
+                height: 16
+
+          - name: Favicon32
+            action: SvgToPngAction
             options:
-              inputFile: src/icon.svg
-              outputFile: dist/favicon-32.png
-              width: 32
-              height: 32
-              
-          - action: SvgToPngAction
-            options:
-              inputFile: src/icon.svg
-              outputFile: dist/favicon-192.png
-              width: 192
-              height: 192
+                svgContent: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="..."/></svg>'
+                outputPath: ./dist/favicon-32.png
+                width: 32
+                height: 32
 ```
 
 ## Complete Icon Workflow
 
 ```yaml
-plugins:
-  - @getkist/action-svg
+stages:
+    - name: Icons
+      steps:
+          # Create sprite for the web
+          - name: BuildSprite
+            action: SvgSpriteAction
+            options:
+                sourceDir: ./src/icons
+                outputDir: ./dist/sprites
 
-pipeline:
-  icons:
-    stages:
-      - name: process
-        steps:
-          # Create sprite for web
-          - action: SvgSpriteAction
+          # Optimize and export as TS/JSON
+          - name: PackageIcons
+            action: SvgPackagerAction
             options:
-              inputDir: src/icons
-              outputDir: dist/sprites
-              spriteFilename: icons.svg
-              optimize: true
-              
-          # Export as JSON for JS frameworks
-          - action: SvgPackagerAction
-            options:
-              inputDir: src/icons
-              outputDir: dist/icons
-              formats:
-                - json
-                - esm
-                
-      - name: favicons
-        steps:
-          - action: SvgToPngAction
-            options:
-              inputFile: src/logo.svg
-              outputFile: dist/favicon.png
-              width: 32
-              height: 32
+                inputDirectory: ./src/icons
+                outputDirectory: ./dist/icons
+                jsonOutputDirectory: ./dist
 ```
 
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-svg)
-- [GitHub](https://github.com/getkist/action-svg)
-- [Changelog](https://github.com/getkist/action-svg/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-svg)

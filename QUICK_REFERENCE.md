@@ -8,28 +8,34 @@ npm run docs:dev          # Start dev server at http://localhost:5173
 npm run docs:build        # Build for production
 npm run docs:preview      # Preview production build
 
-# Documentation
-npm run sync:docs         # Sync docs from getkist repos
+# Code quality
+npm run format            # Prettier over src/**/*.ts
+npm run lint              # ESLint over src/**/*.ts
 ```
+
+> `npm run sync:docs` is defined in `package.json` but its target
+> (`scripts/sync-docs.js`) is not in the repo, so it fails. Project docs
+> under `src/projects/` are edited manually.
 
 ## File Structure Quick Reference
 
-```
+```text
 www-getkist-com/
 ├── src/                 # All documentation content (VitePress site)
 │   ├── .vitepress/      # Configuration
 │   │   └── config.js    # Main config file
 │   ├── guide/           # User guides
-│   ├── projects/        # Project docs (auto-synced from repo doc/ folders)
-│   ├── api/             # API reference
+│   ├── api/             # API + CLI reference
+│   ├── plugins/         # Plugin docs
+│   ├── projects/        # Per-project docs (maintained manually)
+│   ├── media/           # Media assets
+│   ├── public/          # Static files (CNAME, ...)
 │   └── index.md         # Homepage
-│
-├── scripts/
-│   └── sync-docs.js     # Fetch docs from GitHub
 │
 ├── .github/workflows/
 │   └── deploy.yml       # Auto-deploy to GitHub Pages
 │
+├── doc/index.md         # Minimal repo reference
 ├── package.json         # Dependencies and scripts
 ├── README.md            # Project overview
 └── SETUP.md             # Detailed setup guide
@@ -37,22 +43,15 @@ www-getkist-com/
 
 ## Key URLs
 
-- **Local Dev**: http://localhost:5173
-- **GitHub Org**: https://github.com/getkist
-- **VitePress Docs**: https://vitepress.dev
+- **Local Dev**: `http://localhost:5173`
+- **Live Site**: [https://www.getkist.com/](https://www.getkist.com/)
+- **GitHub Org**: [https://github.com/getkist](https://github.com/getkist)
+- **VitePress Docs**: [https://vitepress.dev](https://vitepress.dev)
 
 ## Adding New Content
 
-### New Guide Page
-
-1. Create file: `src/guide/your-page.md`
+1. Create file, e.g. `src/guide/your-page.md`
 2. Add to sidebar in `src/.vitepress/config.js`
-
-### Update Project Docs
-
-```bash
-npm run sync:docs
-```
 
 ## Configuration
 
@@ -76,7 +75,7 @@ export default defineConfig({
 
 ### Automatic (GitHub Pages)
 
-Push to `main` or `dev` branch → Auto-deploys via GitHub Actions
+Push to `main` or `dev` branch → deploys via GitHub Actions (`.github/workflows/deploy.yml`)
 
 ### Manual
 
@@ -88,20 +87,15 @@ npm run docs:build
 ## Troubleshooting
 
 ### Dev server won't start
+
 ```bash
 rm -rf src/.vitepress/cache node_modules
 npm install
 npm run docs:dev
 ```
 
-### Sync fails
-```bash
-# Add GitHub token for higher rate limits
-export GITHUB_TOKEN=your_token
-npm run sync:docs
-```
-
 ### Build errors
+
 ```bash
 # Check config syntax
 npm run docs:build
@@ -110,32 +104,9 @@ npm run docs:build
 rm -rf src/.vitepress/cache
 ```
 
-## Project Features
-
-✅ VitePress static site generator
-✅ Auto-sync from getkist repos
-✅ Search functionality
-✅ Responsive design
-✅ GitHub Actions deployment
-✅ Multiple project documentation
-✅ User guides and API reference
-
-## Next Steps
-
-1. ✅ Site is set up and running
-2. Review generated documentation
-3. Customize homepage and guides
-4. Add project-specific content
-5. Set up GitHub Pages deployment
-6. Share with the team!
-
 ## Getting Help
 
 - See [SETUP.md](SETUP.md) for detailed documentation
 - Check [VitePress docs](https://vitepress.dev) for framework help
 - Open issues on GitHub for bugs
 - Use discussions for questions
-
----
-
-**Current Status**: ✅ Site is running at http://localhost:5173

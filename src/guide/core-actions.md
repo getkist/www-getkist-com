@@ -1,420 +1,416 @@
 # Core Actions
 
-Kist includes several built-in actions that handle common file and directory operations. These core actions are always available without installing any plugins.
+kist ships with ten built-in actions that handle common build tasks. These core actions are always available without installing any plugins, and are referenced from steps by their class name.
 
 ## Overview
 
-| Action | Description |
-|--------|-------------|
-| `directory_clean` | Remove contents of a directory |
-| `directory_copy` | Copy a directory recursively |
-| `directory_create` | Create a new directory |
-| `file_copy` | Copy a file |
-| `file_rename` | Rename or move a file |
-| `template_render` | Render a template file |
-| `version_write` | Write version information to a file |
+| Action                     | Description                                                           |
+| -------------------------- | --------------------------------------------------------------------- |
+| `DirectoryCleanAction`     | Delete the contents of a directory, optionally keeping matching files |
+| `DirectoryCopyAction`      | Recursively copy a directory and its contents                         |
+| `DirectoryCreateAction`    | Create a directory structure under a base path                        |
+| `DocumentationAction`      | Generate documentation with an external tool (e.g. JSDoc)             |
+| `FileCopyAction`           | Copy one or more files into a destination directory                   |
+| `FileRenameAction`         | Rename or move a file                                                 |
+| `PackageManagerAction`     | Read a `package.json` and write a filtered/customized copy            |
+| `RunScriptAction`          | Run an external JavaScript file with Node.js                          |
+| `TypeScriptCompilerAction` | Compile TypeScript using a `tsconfig.json`                            |
+| `VersionWriteAction`       | Replace version strings in one or more files                          |
 
-## directory_clean
-
-Removes all contents from a specified directory, optionally preserving certain files or directories.
-
-### Configuration
+Every step needs a `name`, an `action`, and (usually) `options`:
 
 ```yaml
-actions:
-  - name: directory_clean
-    path: dist
-    preserve:
-      - .gitkeep
-      - README.md
+stages:
+    - name: Build
+      steps:
+          - name: CopyLicense
+            action: FileCopyAction
+            options:
+                srcFile: "./LICENSE"
+                destDir: "./dist"
 ```
+
+## DirectoryCleanAction
+
+Deletes all contents of a directory. Files and directories matching the `keep` glob patterns are retained. If the directory does not exist, the action skips gracefully with a warning.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `path` | string | Yes | Directory path to clean |
-| `preserve` | string[] | No | Files/directories to preserve |
+| Option    | Type     | Required | Description                                               |
+| --------- | -------- | -------- | --------------------------------------------------------- |
+| `dirPath` | string   | Yes      | Path of the directory to clean                            |
+| `keep`    | string[] | No       | Glob patterns (relative to `dirPath`) for entries to keep |
 
 ### Examples
 
-**Clean build directory:**
+**Clean the build directory:**
+
 ```yaml
-- name: directory_clean
-  path: dist
+stages:
+    - name: Clean
+      steps:
+          - name: CleanBuildDir
+            action: DirectoryCleanAction
+            options:
+                dirPath: "./build"
 ```
 
-**Clean but preserve certain files:**
+**Clean but keep certain entries:**
+
 ```yaml
-- name: directory_clean
-  path: build
-  preserve:
-    - .gitkeep
-    - config.json
+stages:
+    - name: Clean
+      steps:
+          - name: CleanBuildDir
+            action: DirectoryCleanAction
+            options:
+                dirPath: "./build"
+                keep:
+                    - "static-assets/**"
+                    - "important-config.json"
+                    - "*.log"
 ```
 
 ---
 
-## directory_copy
+## DirectoryCopyAction
 
-Recursively copies a directory and its contents to a new location.
-
-### Configuration
-
-```yaml
-actions:
-  - name: directory_copy
-    source: src/assets
-    destination: dist/assets
-```
+Recursively copies all files and subdirectories from a source directory to a destination directory. The destination is created if it does not exist.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `source` | string | Yes | Source directory path |
-| `destination` | string | Yes | Destination directory path |
-| `overwrite` | boolean | No | Overwrite existing files (default: true) |
-| `filter` | string | No | Glob pattern to filter files |
+| Option    | Type   | Required | Description                |
+| --------- | ------ | -------- | -------------------------- |
+| `srcDir`  | string | Yes      | Source directory path      |
+| `destDir` | string | Yes      | Destination directory path |
 
-### Examples
+### Example
 
-**Copy assets directory:**
 ```yaml
-- name: directory_copy
-  source: src/assets
-  destination: dist/assets
-```
-
-**Copy with filter:**
-```yaml
-- name: directory_copy
-  source: resources
-  destination: dist/resources
-  filter: "**/*.{png,jpg,svg}"
+stages:
+    - name: CopyBuildArtifacts
+      steps:
+          - name: CopyArtifacts
+            action: DirectoryCopyAction
+            options:
+                srcDir: "./build"
+                destDir: "./deploy"
 ```
 
 ---
 
-## directory_create
+## DirectoryCreateAction
 
-Creates a new directory, including any necessary parent directories.
-
-### Configuration
-
-```yaml
-actions:
-  - name: directory_create
-    path: dist/js/modules
-```
+Ensures a set of directories exists under a base path, creating missing directories recursively.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `path` | string | Yes | Directory path to create |
+| Option        | Type     | Required | Description                                        |
+| ------------- | -------- | -------- | -------------------------------------------------- |
+| `basePath`    | string   | Yes      | Base directory under which directories are created |
+| `directories` | string[] | Yes      | Relative paths of the directories to create        |
 
-### Examples
+### Example
 
-**Create single directory:**
 ```yaml
-- name: directory_create
-  path: output
-```
-
-**Create nested directories:**
-```yaml
-- name: directory_create
-  path: dist/assets/images/icons
+stages:
+    - name: SetupDirectories
+      steps:
+          - name: EnsureProjectStructure
+            action: DirectoryCreateAction
+            options:
+                basePath: "./project"
+                directories:
+                    - "src"
+                    - "src/assets"
+                    - "src/components"
+                    - "docs"
+                    - "build"
 ```
 
 ---
 
-## file_copy
+## DocumentationAction
 
-Copies a single file to a new location.
-
-### Configuration
-
-```yaml
-actions:
-  - name: file_copy
-    source: config/default.json
-    destination: dist/config.json
-```
+Generates project documentation by invoking an external command-line generator (such as JSDoc or another tool with a compatible CLI). The tool must be available on the PATH.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `source` | string | Yes | Source file path |
-| `destination` | string | Yes | Destination file path |
-| `overwrite` | boolean | No | Overwrite if exists (default: true) |
+| Option             | Type   | Required | Description                                                           |
+| ------------------ | ------ | -------- | --------------------------------------------------------------------- |
+| `generatorCommand` | string | No       | Generator executable to run (default: `jsdoc`)                        |
+| `sourcePath`       | string | No       | Source path passed to the generator (default: `./src`)                |
+| `outputPath`       | string | No       | Output directory for generated docs (default: `./docs`)               |
+| `configPath`       | string | No       | Generator config file; when set, it is passed instead of `sourcePath` |
 
-### Examples
+### Example
 
-**Copy configuration file:**
 ```yaml
-- name: file_copy
-  source: src/config.example.json
-  destination: dist/config.json
-```
-
-**Copy without overwriting:**
-```yaml
-- name: file_copy
-  source: defaults/settings.json
-  destination: user/settings.json
-  overwrite: false
+stages:
+    - name: GenerateDocumentation
+      steps:
+          - name: BuildDocumentation
+            action: DocumentationAction
+            options:
+                generatorCommand: "jsdoc"
+                sourcePath: "./src"
+                outputPath: "./docs"
+                configPath: "./jsdoc.json"
 ```
 
 ---
 
-## file_rename
+## FileCopyAction
 
-Renames or moves a file to a new location.
-
-### Configuration
-
-```yaml
-actions:
-  - name: file_rename
-    source: temp/output.tmp
-    destination: dist/bundle.js
-```
+Copies a single file (`srcFile`) or a batch of files (`srcFiles`) into a destination directory. The destination directory is created if needed. Large files are copied with streams, and with `useCache: true` unchanged files are skipped based on kist's file cache.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `source` | string | Yes | Current file path |
-| `destination` | string | Yes | New file path |
-| `overwrite` | boolean | No | Overwrite if exists (default: false) |
+| Option     | Type     | Required                | Description                                                 |
+| ---------- | -------- | ----------------------- | ----------------------------------------------------------- |
+| `srcFile`  | string   | One of the two required | Path of a single source file                                |
+| `srcFiles` | string[] | One of the two required | Paths of multiple source files to copy                      |
+| `destDir`  | string   | Yes                     | Destination directory                                       |
+| `useCache` | boolean  | No                      | Skip files that have not changed since the last cached copy |
+| `parallel` | boolean  | No                      | Copy `srcFiles` concurrently instead of sequentially        |
 
 ### Examples
 
-**Simple rename:**
+**Copy a single file:**
+
 ```yaml
-- name: file_rename
-  source: output.tmp
-  destination: output.js
+stages:
+    - name: CopyFiles
+      steps:
+          - name: CopyMainFile
+            action: FileCopyAction
+            options:
+                srcFile: "./src/files/main.txt"
+                destDir: "./dist/files"
 ```
 
-**Move to different directory:**
+**Copy multiple files with caching and parallelism:**
+
 ```yaml
-- name: file_rename
-  source: build/app.js
-  destination: dist/app.min.js
-  overwrite: true
+stages:
+    - name: CopyFiles
+      steps:
+          - name: CopyStaticFiles
+            action: FileCopyAction
+            options:
+                srcFiles:
+                    - "./LICENSE"
+                    - "./README.md"
+                    - "./CHANGELOG.md"
+                destDir: "./dist"
+                useCache: true
+                parallel: true
 ```
 
 ---
 
-## template_render
+## FileRenameAction
 
-Renders a template file using variable substitution. Supports multiple template formats.
-
-### Configuration
-
-```yaml
-actions:
-  - name: template_render
-    source: templates/index.html.tpl
-    destination: dist/index.html
-    variables:
-      title: My Application
-      version: 1.0.0
-```
+Renames (or moves) a file from a source path to a target path.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `source` | string | Yes | Template file path |
-| `destination` | string | Yes | Output file path |
-| `variables` | object | No | Variables for substitution |
-| `engine` | string | No | Template engine (default: auto-detect) |
+| Option       | Type   | Required | Description       |
+| ------------ | ------ | -------- | ----------------- |
+| `srcPath`    | string | Yes      | Current file path |
+| `targetPath` | string | Yes      | New file path     |
 
-### Template Syntax
+### Example
 
-**Basic variable substitution:**
-```html
-<!-- Template: index.html.tpl -->
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{{ title }}</title>
-</head>
-<body>
-  <h1>Version {{ version }}</h1>
-</body>
-</html>
-```
-
-### Examples
-
-**HTML template:**
 ```yaml
-- name: template_render
-  source: src/index.html.tpl
-  destination: dist/index.html
-  variables:
-    title: My App
-    description: A sample application
-    version: "{{ project.version }}"
-```
-
-**Configuration template:**
-```yaml
-- name: template_render
-  source: config.json.tpl
-  destination: dist/config.json
-  variables:
-    apiUrl: https://api.example.com
-    debug: false
-```
-
-**Using project variables:**
-```yaml
-project:
-  name: my-project
-  version: 2.0.0
-
-actions:
-  - name: template_render
-    source: version.txt.tpl
-    destination: dist/version.txt
-    variables:
-      name: "{{ project.name }}"
-      version: "{{ project.version }}"
-      buildDate: "{{ now | date('YYYY-MM-DD') }}"
+stages:
+    - name: FileOperations
+      steps:
+          - name: RenameReadme
+            action: FileRenameAction
+            options:
+                srcPath: "./README_old.md"
+                targetPath: "./README.md"
 ```
 
 ---
 
-## version_write
+## PackageManagerAction
 
-Writes version information to a file in various formats.
-
-### Configuration
-
-```yaml
-actions:
-  - name: version_write
-    destination: dist/version.json
-    format: json
-```
+Reads an existing `package.json`, optionally extracts only selected fields, merges custom overrides, and writes a new `package.json` into an output directory. Useful for generating a publish-ready `package.json` in `dist/`.
 
 ### Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `destination` | string | Yes | Output file path |
-| `format` | string | No | Output format: `json`, `text`, `js` (default: `json`) |
-| `version` | string | No | Version to write (default: project.version) |
-| `include` | string[] | No | Additional fields to include |
+| Option            | Type     | Required | Description                                                     |
+| ----------------- | -------- | -------- | --------------------------------------------------------------- |
+| `packageJsonPath` | string   | Yes      | Path to the existing `package.json` to read                     |
+| `outputDir`       | string   | Yes      | Directory where the new `package.json` is written               |
+| `fields`          | string[] | No       | Fields to copy from the source file (all fields when omitted)   |
+| `customConfig`    | object   | No       | Extra fields merged on top of the copied fields (overrides win) |
 
-### Output Formats
+### Example
 
-**JSON (default):**
-```json
-{
-  "version": "1.2.3",
-  "buildTime": "2024-01-15T10:30:00Z"
-}
-```
-
-**Text:**
-```
-1.2.3
-```
-
-**JavaScript:**
-```javascript
-export const VERSION = '1.2.3';
-export const BUILD_TIME = '2024-01-15T10:30:00Z';
-```
-
-### Examples
-
-**JSON version file:**
 ```yaml
-- name: version_write
-  destination: dist/version.json
-  format: json
+stages:
+    - name: PackageManagement
+      steps:
+          - name: GeneratePackageJson
+            action: PackageManagerAction
+            options:
+                packageJsonPath: "./package.json"
+                outputDir: "./dist"
+                fields:
+                    - name
+                    - version
+                    - dependencies
+                    - scripts
+                customConfig:
+                    private: true
+                    scripts:
+                        start: "node index.js"
 ```
 
-**Text version file:**
+---
+
+## RunScriptAction
+
+Executes an external JavaScript file with Node.js in a separate process. A non-zero exit or any stderr output fails the step. Use it as an escape hatch for project-specific build logic.
+
+### Options
+
+| Option       | Type     | Required | Description                            |
+| ------------ | -------- | -------- | -------------------------------------- |
+| `scriptPath` | string   | Yes      | Path to the JavaScript file to execute |
+| `args`       | string[] | No       | Arguments passed to the script         |
+
+### Example
+
 ```yaml
-- name: version_write
-  destination: VERSION.txt
-  format: text
+stages:
+    - name: Scripts
+      steps:
+          - name: RunGenerateScript
+            action: RunScriptAction
+            options:
+                scriptPath: "./scripts/generate.js"
+                args:
+                    - "--mode=production"
+                    - "--verbose"
 ```
 
-**JavaScript constants:**
+---
+
+## TypeScriptCompilerAction
+
+Compiles TypeScript using the TypeScript compiler API. It loads and parses a `tsconfig.json`, optionally overrides compiler options and the file list, and fails the step when there are compile errors.
+
+### Options
+
+| Option            | Type     | Required | Description                                                         |
+| ----------------- | -------- | -------- | ------------------------------------------------------------------- |
+| `tsconfigPath`    | string   | No       | Path to `tsconfig.json` (default: `tsconfig.json`)                  |
+| `filePaths`       | string[] | No       | Explicit files to compile (defaults to the files from the tsconfig) |
+| `outputDir`       | string   | No       | Overrides the compiler's `outDir`                                   |
+| `compilerOptions` | object   | No       | Additional compiler options merged over the tsconfig options        |
+
+### Example
+
 ```yaml
-- name: version_write
-  destination: src/version.ts
-  format: js
-  include:
-    - buildTime
-    - gitCommit
+stages:
+    - name: CompileTypeScript
+      steps:
+          - name: CompileTsToJs
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: "./tsconfig.json"
+                outputDir: "./dist"
+                compilerOptions:
+                    target: "ES2020"
 ```
 
-**Custom version:**
+---
+
+## VersionWriteAction
+
+Replaces semantic version strings (`x.y.z`) in one or more files. Each file entry may specify a `key` so that only lines starting with that key (for example `version:`) are updated. When `version` is omitted, the version is read from the project's `package.json`.
+
+### Options
+
+| Option    | Type   | Required | Description                                                               |
+| --------- | ------ | -------- | ------------------------------------------------------------------------- |
+| `files`   | array  | Yes      | List of `{ path, key? }` entries; `key` restricts which lines are updated |
+| `version` | string | No       | Version to write (default: `version` from `package.json`)                 |
+
+### Example
+
 ```yaml
-- name: version_write
-  destination: dist/version.json
-  version: "2.0.0-beta.1"
-  format: json
+stages:
+    - name: WriteVersion
+      steps:
+          - name: ReplaceVersionInFiles
+            action: VersionWriteAction
+            options:
+                # Omit `version` to use the version from package.json
+                version: "2.0.0"
+                files:
+                    - path: "./CITATION.cff"
+                      key: "version:"
+                    - path: "./VERSION"
 ```
 
 ---
 
 ## Combining Core Actions
 
-Core actions can be combined to create powerful build pipelines:
+Core actions combine into complete pipelines. Stages declare their ordering with `dependsOn`:
 
 ```yaml
-project:
-  name: my-app
-  version: 1.0.0
+metadata:
+    name: my-app
 
-actions:
-  # Clean output directory
-  - name: directory_clean
-    path: dist
+stages:
+    - name: Clean
+      steps:
+          - name: CleanDist
+            action: DirectoryCleanAction
+            options:
+                dirPath: "./dist"
 
-  # Create directory structure
-  - name: directory_create
-    path: dist/assets
+    - name: Build
+      dependsOn:
+          - Clean
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: "./tsconfig.json"
 
-  # Copy static assets
-  - name: directory_copy
-    source: src/assets
-    destination: dist/assets
+    - name: Finalize
+      dependsOn:
+          - Build
+      parallel: true
+      steps:
+          - name: CopyAssets
+            action: DirectoryCopyAction
+            options:
+                srcDir: "./src/assets"
+                destDir: "./dist/assets"
 
-  # Copy configuration
-  - name: file_copy
-    source: config/production.json
-    destination: dist/config.json
+          - name: CopyLicense
+            action: FileCopyAction
+            options:
+                srcFile: "./LICENSE"
+                destDir: "./dist"
 
-  # Render HTML template
-  - name: template_render
-    source: src/index.html.tpl
-    destination: dist/index.html
-    variables:
-      title: "{{ project.name }}"
-      version: "{{ project.version }}"
-
-  # Write version file
-  - name: version_write
-    destination: dist/version.json
-    format: json
+          - name: WriteVersion
+            action: VersionWriteAction
+            options:
+                files:
+                    - path: "./VERSION"
 ```
 
 ## Next Steps
 
-- Learn about [plugin actions](/plugins/) for more advanced functionality
-- Configure [action groups](/guide/configuration#action-groups) for organized workflows
-- See [configuration inheritance](/guide/configuration#config-inheritance) for reusable configs
+- Learn about [plugin actions](/plugins/) for Sass, ESLint, Nunjucks, Terser, SVG tooling and more
+- See the [configuration reference](/guide/configuration) for stages, options and `extends`
+- Read the [architecture guide](/guide/architecture) to understand how stages and steps execute

@@ -1,31 +1,37 @@
 {
-  "name": "www-getkist-com",
-  "version": "0.1.0",
-  "description": "Documentation website for getkist projects",
-  "type": "module",
-  "scripts": {
-    "docs:dev": "vitepress dev src",
-    "docs:build": "vitepress build src",
-    "docs:preview": "vitepress preview src",
-    "sync:docs": "node scripts/sync-docs.js",
-    "format": "npx prettier --write src/**/*.ts",
-    "lint": "npx eslint src/**/*.ts"
-  },
-  "keywords": [
-    "documentation",
-    "getkist",
-    "vitepress"
-  ],
-  "author": "Scape Agency",
-  "license": "MIT",
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.56.1",
-    "@typescript-eslint/parser": "^8.56.1",
-    "eslint": "^10.0.3",
-    "prettier": "^3.8.1",
-    "vitepress": "^1.6.4"
-  },
-  "dependencies": {
-    "vue": "^3.5.29"
-  }
+    "name": "www-getkist-com",
+    "version": "0.1.1",
+    "description": "Documentation website for getkist projects",
+    "type": "module",
+    "scripts": {
+        "docs:dev": "vitepress dev src",
+        "docs:build": "vitepress build src",
+        "docs:preview": "vitepress preview src",
+        "sync:docs": "node scripts/sync-docs.js",
+        "sync:api": "npm --prefix ../kist run docs && npm run sync:docs",
+        "format": "prettier --write . --ignore-unknown",
+        "lint": "eslint ."
+    },
+    "keywords": [
+        "documentation",
+        "getkist",
+        "vitepress"
+    ],
+    "author": "Scape Press",
+    "license": "MIT",
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@typescript-eslint/eslint-plugin": "^8.56.1",
+        "@typescript-eslint/parser": "^8.56.1",
+        "eslint": "^10.0.3",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-import-x": "^4.17.1",
+        "globals": "^17.11.0",
+        "prettier": "^3.8.1",
+        "typescript-eslint": "^8.69.0",
+        "vitepress": "^1.6.4"
+    },
+    "dependencies": {
+        "vue": "^3.5.29"
+    }
 }

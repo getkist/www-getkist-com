@@ -4,41 +4,50 @@ This guide covers everything you need to know about developing plugins for kist.
 
 ## Overview
 
-Kist uses a plugin-based architecture that allows you to extend its functionality with custom actions. Plugins are npm packages that export action classes implementing the `ActionPlugin` interface.
+kist uses a plugin-based architecture that allows you to extend its functionality with custom actions. Plugins are npm packages whose **default export** implements the `ActionPlugin` interface; the actions they register become available to pipeline steps by name.
 
-### Plugin Architecture
+### How Discovery Works
 
+On startup, kist scans the consuming project's `node_modules` for packages whose names match one of the default prefixes:
+
+- `@getkist/action-*` - official plugins
+- `kist-action-*` - unscoped community plugins
+- `kist-plugin-*` - unscoped community plugins (legacy prefix)
+
+Each matching package is imported via its `module`, `main`, or `exports["."]` entry point (falling back to `dist/index.js`). The default export must implement the `ActionPlugin` interface; its `registerActions()` return value is folded into kist's action registry, making the actions available to pipeline steps by name.
+
+Plugins are never declared in `kist.yml` - installing the package is enough. Plugins can also be loaded from a local directory or registered programmatically via `PluginManager.registerPlugin()`.
+
+## The Plugin Contract
+
+A plugin's default export implements `ActionPlugin`:
+
+```typescript
+import type { ActionPlugin } from "kist";
+import { MyCustomAction } from "./actions/MyCustomAction/index.js";
+import packageJson from "../package.json" with { type: "json" };
+
+const plugin: ActionPlugin = {
+    // Derive the version from package.json so it never drifts.
+    version: packageJson.version,
+    description: "My custom kist plugin",
+    registerActions() {
+        return {
+            MyCustomAction,
+        };
+    },
+};
+
+export default plugin;
 ```
-┌─────────────────────────────────────────────────┐
-│                  kist Core                       │
-├─────────────────────────────────────────────────┤
-│  PluginManager                                   │
-│  ├── loadPlugins() - Discovers and loads plugins │
-│  ├── getAction() - Retrieves action by name     │
-│  └── listActions() - Lists all available actions │
-├─────────────────────────────────────────────────┤
-│  Core Actions (Built-in)                         │
-│  ├── directory_clean                             │
-│  ├── directory_copy                              │
-│  ├── directory_create                            │
-│  ├── file_copy                                   │
-│  ├── file_rename                                 │
-│  ├── template_render                             │
-│  └── version_write                               │
-├─────────────────────────────────────────────────┤
-│  Plugin Actions (External)                       │
-│  ├── kist-action-sass                            │
-│  ├── kist-action-typescript                      │
-│  ├── kist-action-jinja                           │
-│  └── ... (community plugins)                     │
-└─────────────────────────────────────────────────┘
-```
+
+The keys returned by `registerActions()` are the action names users write in `kist.yml`; the values are the action class constructors. Besides `registerActions()`, the interface accepts optional `version`, `description`, `author`, `repository`, and `keywords` fields.
 
 ## Creating a Plugin
 
 ### 1. Set Up Your Project
 
-Start by creating a new npm package:
+Start by creating a new npm package (the name must match a discovery prefix):
 
 ```bash
 mkdir kist-action-myaction
@@ -46,222 +55,76 @@ cd kist-action-myaction
 npm init -y
 ```
 
+::: tip Starting Point
+The [kist-action-master](https://github.com/getkist/kist-action-master) repository is a template you can copy to bootstrap a new plugin.
+:::
+
 ### 2. Install Dependencies
 
+Declare `kist` as a peer dependency (it provides the `Action` base class and interfaces), and install it plus TypeScript for development:
+
 ```bash
-npm install typescript --save-dev
-npm install @types/node --save-dev
+npm install --save-peer kist
+npm install --save-dev kist typescript @types/node
 ```
 
-### 3. Configure TypeScript
+### 3. Write an Action
 
-Create `tsconfig.json`:
-
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "declaration": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": false,
-    "inlineSourceMap": true,
-    "inlineSources": true,
-    "experimentalDecorators": true,
-    "strictPropertyInitialization": false,
-    "outDir": "./dist",
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
-}
-```
-
-### 4. Create the Plugin Class
-
-Create `src/index.ts`:
+Each action implements `ActionInterface` - most easily by extending the `Action` base class exported from `kist`. Create `src/actions/MyCustomAction/index.ts`:
 
 ```typescript
-import * as fs from 'fs';
-import * as path from 'path';
+import { Action } from "kist";
 
-/**
- * Plugin metadata interface
- */
-export interface PluginInfo {
-  name: string;
-  version: string;
-  description: string;
-  author?: string;
-}
-
-/**
- * Action execution context
- */
-export interface ActionContext {
-  workingDir: string;
-  config: Record<string, any>;
-  logger: {
-    info: (msg: string) => void;
-    warn: (msg: string) => void;
-    error: (msg: string) => void;
-    debug: (msg: string) => void;
-  };
-}
-
-/**
- * Action execution result
- */
-export interface ActionResult {
-  success: boolean;
-  message?: string;
-  data?: Record<string, any>;
-}
-
-/**
- * Action configuration for your plugin
- */
-export interface MyActionConfig {
-  source: string;
-  destination: string;
-  options?: {
-    verbose?: boolean;
-    // Add your custom options here
-  };
-}
-
-/**
- * My Custom Action Plugin
- * 
- * This action does something useful with files.
- */
-export class MyAction {
-  /**
-   * Unique identifier for the action
-   */
-  static readonly actionName = 'my_action';
-
-  /**
-   * Human-readable description
-   */
-  static readonly description = 'Performs a custom action on files';
-
-  /**
-   * Plugin metadata
-   */
-  static readonly pluginInfo: PluginInfo = {
-    name: 'kist-action-myaction',
-    version: '1.0.0',
-    description: 'A custom kist action plugin'
-  };
-
-  /**
-   * Configuration schema for validation
-   */
-  static readonly configSchema = {
-    type: 'object',
-    required: ['source', 'destination'],
-    properties: {
-      source: {
-        type: 'string',
-        description: 'Source file or directory'
-      },
-      destination: {
-        type: 'string',
-        description: 'Destination file or directory'
-      },
-      options: {
-        type: 'object',
-        properties: {
-          verbose: {
-            type: 'boolean',
-            description: 'Enable verbose output'
-          }
-        }
-      }
+export class MyCustomAction extends Action {
+    /**
+     * Optional: reject bad options up front so the pipeline fails fast
+     * with a clear message.
+     */
+    validateOptions(options: Record<string, unknown>): boolean {
+        return typeof options.input === "string";
     }
-  };
 
-  /**
-   * Execute the action
-   * 
-   * @param config - Action configuration from kist.yml
-   * @param context - Execution context with working directory and logger
-   * @returns Promise resolving to action result
-   */
-  async execute(
-    config: MyActionConfig,
-    context: ActionContext
-  ): Promise<ActionResult> {
-    const { source, destination, options = {} } = config;
-    const { workingDir, logger } = context;
-
-    try {
-      // Resolve paths relative to working directory
-      const sourcePath = path.resolve(workingDir, source);
-      const destPath = path.resolve(workingDir, destination);
-
-      // Validate source exists
-      if (!fs.existsSync(sourcePath)) {
-        return {
-          success: false,
-          message: `Source not found: ${sourcePath}`
-        };
-      }
-
-      if (options.verbose) {
-        logger.info(`Processing: ${sourcePath}`);
-      }
-
-      // Your action logic here
-      // ...
-
-      logger.info(`Successfully processed ${source} → ${destination}`);
-
-      return {
-        success: true,
-        message: 'Action completed successfully',
-        data: {
-          source: sourcePath,
-          destination: destPath
-        }
-      };
-    } catch (error) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : String(error);
-
-      logger.error(`Action failed: ${errorMessage}`);
-
-      return {
-        success: false,
-        message: errorMessage
-      };
+    async execute(options: Record<string, unknown>): Promise<void> {
+        this.logInfo(`Processing ${options.input}...`);
+        // ... do the work ...
+        // Throw an Error to fail the step (and the build).
     }
-  }
 }
-
-// Default export for plugin discovery
-export default MyAction;
 ```
 
-### 5. Configure Package.json
+### 4. Export the Plugin
 
-Update your `package.json`:
+Create `src/index.ts` with the plugin object as the default export:
+
+```typescript
+import type { ActionPlugin } from "kist";
+import { MyCustomAction } from "./actions/MyCustomAction/index.js";
+import packageJson from "../package.json" with { type: "json" };
+
+const plugin: ActionPlugin = {
+    version: packageJson.version,
+    description: "My custom kist plugin",
+    registerActions() {
+        return {
+            MyCustomAction,
+        };
+    },
+};
+
+export default plugin;
+export { MyCustomAction };
+```
+
+### 5. Configure package.json
+
+Point the entry fields at the compiled file whose default export is the plugin object:
 
 ```json
 {
   "name": "kist-action-myaction",
   "version": "1.0.0",
   "description": "A custom kist action plugin",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "keywords": [
@@ -280,99 +143,46 @@ Update your `package.json`:
     "kist": ">=0.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
+    "kist": ">=0.1.0",
     "typescript": "^5.0.0"
   }
 }
 ```
 
-## Configuration Schema
+## Using the Plugin
 
-### Validation
+Once the package is installed in a project, its actions can be referenced directly in `kist.yml`:
 
-Kist validates action configurations against the `configSchema`. Use JSON Schema format:
-
-```typescript
-static readonly configSchema = {
-  type: 'object',
-  required: ['inputFile', 'outputFile'],
-  properties: {
-    inputFile: {
-      type: 'string',
-      description: 'Input file path'
-    },
-    outputFile: {
-      type: 'string',
-      description: 'Output file path'
-    },
-    minify: {
-      type: 'boolean',
-      default: false,
-      description: 'Enable minification'
-    },
-    sourcemap: {
-      type: 'boolean',
-      default: true,
-      description: 'Generate source maps'
-    },
-    advanced: {
-      type: 'object',
-      properties: {
-        optimization: {
-          type: 'string',
-          enum: ['none', 'basic', 'full'],
-          default: 'basic'
-        }
-      }
-    }
-  }
-};
+```yaml
+stages:
+    - name: Build
+      steps:
+          - name: RunMyAction
+            action: MyCustomAction
+            options:
+                input: "./src"
 ```
 
-### Complex Validation Example
+## Validating Options
+
+Implement the optional `validateOptions()` method to reject bad configuration before `execute()` does any work:
 
 ```typescript
-static readonly configSchema = {
-  type: 'object',
-  required: ['source'],
-  properties: {
-    source: {
-      oneOf: [
-        { type: 'string' },
-        { 
-          type: 'array',
-          items: { type: 'string' }
-        }
-      ],
-      description: 'Source file(s) - can be string or array'
-    },
-    output: {
-      type: 'object',
-      required: ['directory'],
-      properties: {
-        directory: { type: 'string' },
-        filename: { 
-          type: 'string',
-          pattern: '^[a-zA-Z0-9_-]+\\.[a-z]+$'
-        }
-      }
-    },
-    transforms: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['type'],
-        properties: {
-          type: { 
-            type: 'string',
-            enum: ['minify', 'compress', 'optimize']
-          },
-          options: { type: 'object' }
-        }
-      }
+validateOptions(options: Record<string, unknown>): boolean {
+    if (!options.inputFile || typeof options.inputFile !== "string") {
+        this.logError("Invalid options: 'inputFile' is required and must be a string.");
+        return false;
     }
-  }
-};
+    return true;
+}
+
+async execute(options: Record<string, unknown>): Promise<void> {
+    if (!this.validateOptions(options)) {
+        throw new Error("Invalid options provided to MyCustomAction.");
+    }
+    // ...
+}
 ```
 
 ## Testing Your Plugin
@@ -395,101 +205,25 @@ module.exports = {
 Create `src/index.test.ts`:
 
 ```typescript
-import { MyAction } from './index';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
+import plugin from './index';
+import { MyCustomAction } from './index';
 
-describe('MyAction', () => {
-  let tempDir: string;
-  let mockLogger: any;
-
-  beforeEach(() => {
-    // Create temp directory for tests
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'myaction-test-'));
-    
-    // Mock logger
-    mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn()
-    };
+describe('kist-action-myaction', () => {
+  it('registers the action', () => {
+    const actions = plugin.registerActions();
+    expect(actions.MyCustomAction).toBe(MyCustomAction);
   });
 
-  afterEach(() => {
-    // Clean up temp directory
-    fs.rmSync(tempDir, { recursive: true, force: true });
+  it('rejects invalid options', () => {
+    const action = new MyCustomAction();
+    expect(action.validateOptions({})).toBe(false);
   });
 
-  it('should have correct action name', () => {
-    expect(MyAction.actionName).toBe('my_action');
-  });
-
-  it('should have valid config schema', () => {
-    expect(MyAction.configSchema).toBeDefined();
-    expect(MyAction.configSchema.type).toBe('object');
-    expect(MyAction.configSchema.required).toContain('source');
-  });
-
-  it('should execute successfully with valid config', async () => {
-    // Setup test file
-    const sourceFile = path.join(tempDir, 'input.txt');
-    fs.writeFileSync(sourceFile, 'test content');
-
-    const action = new MyAction();
-    const result = await action.execute(
-      {
-        source: 'input.txt',
-        destination: 'output.txt'
-      },
-      {
-        workingDir: tempDir,
-        config: {},
-        logger: mockLogger
-      }
-    );
-
-    expect(result.success).toBe(true);
-  });
-
-  it('should fail when source does not exist', async () => {
-    const action = new MyAction();
-    const result = await action.execute(
-      {
-        source: 'nonexistent.txt',
-        destination: 'output.txt'
-      },
-      {
-        workingDir: tempDir,
-        config: {},
-        logger: mockLogger
-      }
-    );
-
-    expect(result.success).toBe(false);
-    expect(result.message).toContain('Source not found');
-  });
-
-  it('should log verbose output when enabled', async () => {
-    const sourceFile = path.join(tempDir, 'input.txt');
-    fs.writeFileSync(sourceFile, 'test content');
-
-    const action = new MyAction();
-    await action.execute(
-      {
-        source: 'input.txt',
-        destination: 'output.txt',
-        options: { verbose: true }
-      },
-      {
-        workingDir: tempDir,
-        config: {},
-        logger: mockLogger
-      }
-    );
-
-    expect(mockLogger.info).toHaveBeenCalled();
+  it('executes with valid options', async () => {
+    const action = new MyCustomAction();
+    await expect(
+      action.execute({ input: './fixtures' })
+    ).resolves.toBeUndefined();
   });
 });
 ```
@@ -508,6 +242,7 @@ Test your plugin with kist in a real project:
 ```bash
 # Link your plugin locally
 cd kist-action-myaction
+npm run build
 npm link
 
 # In a test project
@@ -516,91 +251,54 @@ npm link kist-action-myaction
 
 # Create kist.yml
 cat > kist.yml << 'EOF'
-project:
-  name: test-project
-  version: 1.0.0
-
-actions:
-  - name: my_action
-    source: src/input.txt
-    destination: dist/output.txt
-    options:
-      verbose: true
+stages:
+    - name: Build
+      steps:
+          - name: RunMyAction
+            action: MyCustomAction
+            options:
+                input: "./src"
 EOF
 
 # Run kist
-npx kist run
+npx kist --verbose
 ```
 
 ## Best Practices
 
-### Error Handling
+### Throw on Failure
 
-Always wrap your action logic in try-catch and return meaningful error messages:
+A thrown error fails the step, the stage, and (with the default `haltOnFailure: true`) the whole build with a non-zero exit code. Never swallow errors - a silently green build is worse than a red one.
 
 ```typescript
-async execute(config: Config, context: ActionContext): Promise<ActionResult> {
-  try {
-    // Validate inputs
-    if (!config.source) {
-      return {
-        success: false,
-        message: 'Missing required configuration: source'
-      };
+async execute(options: Record<string, unknown>): Promise<void> {
+    try {
+        await this.processFile(options);
+        this.logInfo("Processing completed successfully.");
+    } catch (error) {
+        this.logError("Processing failed.", error);
+        throw error; // re-throw so the pipeline halts
     }
-
-    // Perform action
-    await this.processFile(config, context);
-
-    return { success: true };
-  } catch (error) {
-    // Handle specific error types
-    if (error instanceof FileNotFoundError) {
-      return {
-        success: false,
-        message: `File not found: ${error.path}`
-      };
-    }
-
-    // Log full error for debugging
-    context.logger.error(`Unexpected error: ${error}`);
-    
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
 }
 ```
 
+### Depend on kist as a Peer
+
+Declare `kist` as a `peerDependency` instead of vendoring the `Action` base class or the interfaces. Vendored copies drift.
+
 ### Logging
 
-Use the provided logger for consistent output:
+Log through the base class helpers so output respects the user's configured log level:
 
 ```typescript
 // Information about progress
-context.logger.info('Starting file processing...');
+this.logInfo('Starting file processing...');
 
 // Warnings that don't stop execution
-context.logger.warn('File already exists, will be overwritten');
+this.logWarn('File already exists, will be overwritten');
 
 // Errors that cause failure
-context.logger.error('Failed to read configuration file');
-
-// Debug info (only shown in verbose mode)
-context.logger.debug(`Processing options: ${JSON.stringify(options)}`);
-```
-
-### Path Handling
-
-Always resolve paths relative to the working directory:
-
-```typescript
-// Good - resolved to working directory
-const sourcePath = path.resolve(context.workingDir, config.source);
-
-// Bad - relative to current process directory
-const sourcePath = config.source;
+this.logError('Failed to read configuration file');
 ```
 
 ### Async Operations
@@ -609,17 +307,9 @@ Use async/await for file operations:
 
 ```typescript
 // Good - async with proper error handling
-async execute(config: Config, context: ActionContext): Promise<ActionResult> {
+async execute(options: Record<string, unknown>): Promise<void> {
   const content = await fs.promises.readFile(sourcePath, 'utf-8');
   await fs.promises.writeFile(destPath, processedContent);
-  return { success: true };
-}
-
-// Avoid - synchronous operations block the event loop
-execute(config: Config, context: ActionContext): ActionResult {
-  const content = fs.readFileSync(sourcePath, 'utf-8');
-  fs.writeFileSync(destPath, processedContent);
-  return { success: true };
 }
 ```
 
@@ -638,68 +328,14 @@ npm test
 npm pack --dry-run
 ```
 
-### 2. Update Documentation
+### 2. Publishing Checklist
 
-Create a comprehensive README.md:
-
-```markdown
-# kist-action-myaction
-
-A kist plugin for doing X.
-
-## Installation
-
-\`\`\`bash
-npm install kist-action-myaction
-\`\`\`
-
-## Usage
-
-In your `kist.yml`:
-
-\`\`\`yaml
-actions:
-  - name: my_action
-    source: src/input.txt
-    destination: dist/output.txt
-    options:
-      verbose: true
-\`\`\`
-
-## Configuration
-
-| Option | Type | Required | Default | Description |
-|--------|------|----------|---------|-------------|
-| source | string | Yes | - | Source file path |
-| destination | string | Yes | - | Destination file path |
-| options.verbose | boolean | No | false | Enable verbose output |
-
-## Examples
-
-### Basic Usage
-
-\`\`\`yaml
-actions:
-  - name: my_action
-    source: input.txt
-    destination: output.txt
-\`\`\`
-
-### With All Options
-
-\`\`\`yaml
-actions:
-  - name: my_action
-    source: src/data.json
-    destination: dist/data.min.json
-    options:
-      verbose: true
-\`\`\`
-
-## License
-
-MIT
-```
+- Name the package `@getkist/action-<name>`, `kist-action-<name>`, or `kist-plugin-<name>` so discovery finds it.
+- Point `main`/`module`/`exports` at the compiled entry file whose default export is the plugin object.
+- Derive `version` from `package.json` - do not hardcode it.
+- Declare `kist` as a `peerDependency`.
+- Add `kist` and `kist-plugin` keywords for discoverability.
+- Include a README documenting each action and its options.
 
 ### 3. Publish to npm
 
@@ -717,15 +353,15 @@ Submit a pull request to add your plugin to the [kist community plugins list](ht
 
 ## Official Plugins
 
-Kist maintains several official plugins that serve as excellent references:
+kist maintains several official plugins that serve as excellent references:
 
 | Plugin | Description | Source |
-|--------|-------------|--------|
-| `kist-action-sass` | Compile SASS/SCSS to CSS | [GitHub](https://github.com/getkist/kist-action-sass) |
-| `kist-action-typescript` | Compile TypeScript | [GitHub](https://github.com/getkist/kist-action-typescript) |
-| `kist-action-jinja` | Process Jinja2 templates | [GitHub](https://github.com/getkist/kist-action-jinja) |
-| `kist-action-svg` | Optimize and package SVGs | [GitHub](https://github.com/getkist/kist-action-svg) |
-| `kist-action-test` | Run tests with jest/vitest | [GitHub](https://github.com/getkist/kist-action-test) |
+| --- | --- | --- |
+| `@getkist/action-sass` | Compile SASS/SCSS to CSS | [GitHub](https://github.com/getkist/kist-action-sass) |
+| `@getkist/action-typescript` | Compile TypeScript | [GitHub](https://github.com/getkist/kist-action-typescript) |
+| `@getkist/action-nunjucks` | Render Nunjucks/Jinja2 templates | [GitHub](https://github.com/getkist/kist-action-nunjucks) |
+| `@getkist/action-svg` | Optimize and package SVGs | [GitHub](https://github.com/getkist/kist-action-svg) |
+| `@getkist/action-jest` | Run tests with Jest | [GitHub](https://github.com/getkist/kist-action-jest) |
 
 ## Troubleshooting
 
@@ -734,24 +370,23 @@ Kist maintains several official plugins that serve as excellent references:
 If kist can't find your plugin:
 
 1. Ensure it's installed: `npm list kist-action-myaction`
-2. Check the package name in `package.json` starts with `kist-action-`
-3. Verify the main entry point exports the action class
+2. Check the package name in `package.json` matches a discovery prefix (`@getkist/action-*`, `kist-action-*`, `kist-plugin-*`)
+3. Verify the entry point's default export is the plugin object
 
-### Configuration Validation Errors
+### Action Not Found
 
-If you get schema validation errors:
+If a step referencing your action fails validation at startup:
 
-1. Check your `configSchema` matches the expected format
-2. Ensure all required fields are defined in the schema
-3. Verify types match (string vs array, etc.)
+1. Check the action name in `kist.yml` matches a key returned by `registerActions()` (case-sensitive)
+2. Look for plugin load errors in the kist output
+3. Enable debug logging: `kist --verbose`
 
-### Action Not Executing
+### Options Validation Errors
 
-If your action isn't running:
+If your action rejects its options:
 
-1. Check the action name in `kist.yml` matches `actionName`
-2. Look for errors in the kist output
-3. Enable verbose mode: `kist run --verbose`
+1. Check the step's `options` against what `validateOptions()` expects
+2. Make validation errors specific - log which option failed and why
 
 ## Next Steps
 

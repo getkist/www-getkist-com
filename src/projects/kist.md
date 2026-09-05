@@ -276,14 +276,14 @@ graph TD
 
 ### Authors
 
-**kist** is an open-source project by **[Scape Agency](https://www.scape.agency "Scape Agency website")**.
+**kist** is an open-source project by **[Scape Press](https://www.scape.press "Scape Press website")**.
 
-#### Scape Agency
+#### Scape Press
 
-Scape Agency is a spatial innovation collective that dreams, discovers and designs the everyday of tomorrow. We blend design thinking with emerging technologies to create a brighter perspective for people and planet. Our products and services naturalise technology in liveable and sustainable –scapes that spark the imagination and inspire future generations.
+Scape Press is a spatial innovation collective that dreams, discovers and designs the everyday of tomorrow. We blend design thinking with emerging technologies to create a brighter perspective for people and planet. Our products and services naturalise technology in liveable and sustainable –scapes that spark the imagination and inspire future generations.
 
-- website: [scape.agency](https://www.scape.agency "Scape Agency website")
-- github: [github.com/getkist](https://github.com/getkist "Scape Agency GitHub")
+- website: [scape.press](https://www.scape.press "Scape Press website")
+- github: [github.com/getkist](https://github.com/getkist "Scape Press GitHub")
 
 ### Development Resources
 
@@ -303,7 +303,7 @@ Contributions are welcome! Follow these steps to contribute:
 
 #### Copyright
 
-Copyright &copy; 2025 [Scape Agency BV](https://www.scape.agency/ "Scape Agency website"). All Rights Reserved.
+Copyright &copy; 2025 [Scape Press BV](https://www.scape.press/ "Scape Press website"). All Rights Reserved.
 
 #### License
 
@@ -316,7 +316,7 @@ Except as otherwise noted, the code in this repository is licensed under the MIT
 ---
 
 <p align="center">
-    <b>Made with ❤️ by <a href="https://www.scape.agency" target="_blank">Scape Agency</a></b>
+    <b>Made with ❤️ by <a href="https://www.scape.press" target="_blank">Scape Press</a></b>
 </p>
 
 ## Repository Info

@@ -5,36 +5,39 @@ Thank you for your interest in contributing to kist! This guide will help you ge
 ## Quick Start
 
 1. **Fork & Clone**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/kist.git
-   cd kist
-   npm install
-   ```
+
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/kist.git
+    cd kist
+    npm install
+    ```
 
 2. **Create a Branch**
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/issue-description
-   ```
+
+    ```bash
+    git checkout -b feature/your-feature-name
+    # or
+    git checkout -b fix/issue-description
+    ```
 
 3. **Make Changes & Test**
-   ```bash
-   npm run build
-   npm test
-   ```
+
+    ```bash
+    npm run build
+    npm test
+    ```
 
 4. **Submit PR**
-   - Write clear commit messages
-   - Reference any related issues
-   - Ensure all tests pass
+    - Write clear commit messages
+    - Reference any related issues
+    - Ensure all tests pass
 
 ## Development Setup
 
 ### Prerequisites
 
-- Node.js 18.x or higher
-- npm 9.x or higher
+- Node.js 22.0.0 or higher
+- npm 9.0.0 or higher
 - Git
 
 ### Installing Dependencies
@@ -46,17 +49,20 @@ npm install
 ### Building
 
 ```bash
-# Build TypeScript to JavaScript
+# Compile TypeScript, then run kist's own pipeline (self-build)
 npm run build
 
-# Watch mode for development
-npm run build:watch
+# Type-check only, without emitting output
+npm run build:check
+
+# Build and run the CLI against the repo's kist.yml
+npm run dev
 ```
 
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run the full test suite
 npm test
 
 # Run tests in watch mode
@@ -64,12 +70,9 @@ npm run test:watch
 
 # Run tests with coverage
 npm run test:coverage
-
-# Run specific test file
-npm test -- path/to/test.ts
 ```
 
-### Linting
+### Linting & Formatting
 
 ```bash
 # Run ESLint
@@ -77,21 +80,29 @@ npm run lint
 
 # Fix auto-fixable issues
 npm run lint:fix
+
+# Format with Prettier
+npm run format
 ```
 
 ## Project Structure
 
-```
+```text
 kist/
-├── bin/               # CLI entry points
-│   └── ts/            # TypeScript CLI source
-├── src/               # Main source code
-│   ├── actions/       # Built-in action implementations
-│   ├── core/          # Core engine components
-│   └── utils/         # Utility functions
-├── doc/               # Documentation source files
-├── scripts/           # Build and utility scripts
-└── test/              # Test files
+├── bin/               # Utility scripts (test runner, version bump, ...)
+├── src/
+│   └── ts/            # TypeScript source
+│       ├── actions/   # Built-in action implementations
+│       ├── cli/       # CLI entry point
+│       ├── config/    # Default configuration
+│       ├── core/      # Engine: pipeline, plugin, cache, validation
+│       ├── interface/ # Public interfaces (config, actions, plugins)
+│       ├── live/      # Live reload server and watcher
+│       ├── logger/    # Logging
+│       └── types/     # Shared type definitions
+├── tst/               # Test files
+├── dist/              # Build output (generated)
+└── kist.yml           # kist's own pipeline configuration
 ```
 
 ## Coding Standards
@@ -105,38 +116,39 @@ kist/
 
 ```typescript
 // Good
-interface ActionConfig {
-  source: string;
-  destination: string;
+interface CopyOptions {
+    srcFile: string;
+    destDir: string;
 }
 
-async function processFile(config: ActionConfig): Promise<void> {
-  // ...
+async function copyFile(options: CopyOptions): Promise<void> {
+    // ...
 }
 
 // Avoid
-type Config = {
-  src: string;
-  dst: string;
-}
+type Opts = {
+    s: string;
+    d: string;
+};
 
-async function doStuff(c: Config) {
-  // ...
+async function doStuff(o: Opts) {
+    // ...
 }
 ```
 
 ### Code Style
 
-- Use 2 spaces for indentation
-- Use single quotes for strings
-- Add trailing commas in multiline arrays/objects
-- Maximum line length: 100 characters
+Formatting and linting are enforced by the repo's Prettier and ESLint configurations — run `npm run format` and `npm run lint` before committing. In short:
+
+- 4 spaces for indentation
+- Double quotes for strings
+- Trailing commas in multiline arrays/objects
 
 ### Commit Messages
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-```
+```text
 <type>(<scope>): <description>
 
 [optional body]
@@ -145,6 +157,7 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 ```
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation only
@@ -154,14 +167,15 @@ Types:
 - `chore`: Build process or auxiliary tool changes
 
 Examples:
-```
-feat(actions): add support for glob patterns in file_copy
 
-fix(cli): handle spaces in file paths correctly
+```text
+feat(actions): add batch copy support to FileCopyAction
+
+fix(cli): handle spaces in config file paths correctly
 
 docs: update plugin development guide
 
-test(core): add unit tests for config parser
+test(core): add unit tests for config validation
 ```
 
 ## Types of Contributions
@@ -207,35 +221,38 @@ Improvements to documentation are always welcome:
 
 ### Writing Tests
 
-- Place tests next to source files or in `test/` directory
+- Place tests in the `tst/` directory
 - Use descriptive test names
 - Test both success and failure cases
 - Mock external dependencies
 
 ```typescript
-describe('FileProcessor', () => {
-  describe('processFile', () => {
-    it('should copy file to destination', async () => {
-      // Arrange
-      const source = 'test/fixtures/input.txt';
-      const dest = 'test/output/output.txt';
-      
-      // Act
-      await processFile({ source, destination: dest });
-      
-      // Assert
-      expect(fs.existsSync(dest)).toBe(true);
-    });
+describe("FileCopyAction", () => {
+    describe("execute", () => {
+        it("should copy file to destination directory", async () => {
+            // Arrange
+            const action = new FileCopyAction();
 
-    it('should throw error when source does not exist', async () => {
-      // Arrange
-      const source = 'nonexistent.txt';
-      
-      // Act & Assert
-      await expect(processFile({ source, destination: 'out.txt' }))
-        .rejects.toThrow('Source file not found');
+            // Act
+            await action.execute({
+                srcFile: "tst/fixtures/input.txt",
+                destDir: "tst/output",
+            });
+
+            // Assert
+            expect(fs.existsSync("tst/output/input.txt")).toBe(true);
+        });
+
+        it("should throw when required options are missing", async () => {
+            // Arrange
+            const action = new FileCopyAction();
+
+            // Act & Assert
+            await expect(action.execute({})).rejects.toThrow(
+                "Missing required options"
+            );
+        });
     });
-  });
 });
 ```
 
@@ -248,35 +265,36 @@ describe('FileProcessor', () => {
 ## Pull Request Process
 
 1. **Update your fork**
-   ```bash
-   git fetch upstream
-   git rebase upstream/main
-   ```
+
+    ```bash
+    git fetch upstream
+    git rebase upstream/main
+    ```
 
 2. **Push your branch**
-   ```bash
-   git push origin feature/your-feature
-   ```
+
+    ```bash
+    git push origin feature/your-feature
+    ```
 
 3. **Create Pull Request**
-   - Use a clear, descriptive title
-   - Fill out the PR template
-   - Link related issues
+    - Use a clear, descriptive title
+    - Fill out the PR template
+    - Link related issues
 
 4. **Code Review**
-   - Address review feedback
-   - Keep commits clean (squash if needed)
-   - Be responsive to questions
+    - Address review feedback
+    - Keep commits clean (squash if needed)
+    - Be responsive to questions
 
 5. **Merge**
-   - Maintainers will merge when approved
-   - Your commits may be squashed
+    - Maintainers will merge when approved
+    - Your commits may be squashed
 
 ## Getting Help
 
 - **GitHub Issues**: For bugs and feature requests
-- **Discussions**: For questions and general discussion
-- **Discord**: For real-time chat with the community
+- **GitHub Discussions**: For questions and general discussion
 
 ## License
 

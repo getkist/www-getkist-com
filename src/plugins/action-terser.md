@@ -8,63 +8,69 @@ JavaScript minification with Terser.
 npm install --save-dev @getkist/action-terser
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
+
 ## Actions
 
 ### JavaScriptMinifyAction
 
-Minifies JavaScript files using Terser.
+Minifies a single JavaScript file using Terser.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `inputFile` | `string` | Required | Path to input JS file |
-| `outputFile` | `string` | Required | Path to output file |
-| `sourceMap` | `boolean` | `false` | Generate source maps |
-| `mangle` | `boolean` | `true` | Mangle variable names |
-| `compress` | `boolean\|object` | `true` | Compression options |
-| `format` | `object` | - | Output format options |
+| --- | --- | --- | --- |
+| `inputPath` | `string` | Required | Path to the input JS file |
+| `outputPath` | `string` | Required | Path to the minified output file (parent directories are created) |
+| `customConfig` | `object` | `{}` | Terser configuration overrides, shallow-merged over the package defaults |
+
+`customConfig` accepts the keys from the [Terser API reference](https://terser.org/docs/api-reference/), such as `compress`, `mangle`, `format`, and `sourceMap`. Each top-level key you provide fully replaces that section of the defaults (shallow merge).
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-terser
-
-pipeline:
-  build:
-    stages:
-      - name: minify
-        steps:
-          - action: JavaScriptMinifyAction
+stages:
+    - name: Minify
+      steps:
+          - name: MinifyBundle
+            action: JavaScriptMinifyAction
             options:
-              inputFile: dist/js/bundle.js
-              outputFile: dist/js/bundle.min.js
-```
-
-#### With Source Maps
-
-```yaml
-- action: JavaScriptMinifyAction
-  options:
-    inputFile: dist/js/bundle.js
-    outputFile: dist/js/bundle.min.js
-    sourceMap: true
+                inputPath: ./dist/js/bundle.js
+                outputPath: ./dist/js/bundle.min.js
 ```
 
 #### Custom Compression
 
 ```yaml
-- action: JavaScriptMinifyAction
-  options:
-    inputFile: dist/js/bundle.js
-    outputFile: dist/js/bundle.min.js
-    compress:
-      drop_console: true
-      drop_debugger: true
-      pure_funcs:
-        - console.log
-        - console.debug
+stages:
+    - name: Minify
+      steps:
+          - name: MinifyBundle
+            action: JavaScriptMinifyAction
+            options:
+                inputPath: ./dist/js/bundle.js
+                outputPath: ./dist/js/bundle.min.js
+                customConfig:
+                    compress:
+                        drop_console: true
+                        drop_debugger: true
+                        passes: 2
+```
+
+#### With Source Map
+
+```yaml
+stages:
+    - name: Minify
+      steps:
+          - name: MinifyBundle
+            action: JavaScriptMinifyAction
+            options:
+                inputPath: ./dist/js/bundle.js
+                outputPath: ./dist/js/bundle.min.js
+                customConfig:
+                    sourceMap:
+                        filename: "bundle.min.js.map"
 ```
 
 ## After TypeScript Compilation
@@ -72,65 +78,40 @@ pipeline:
 Common workflow: compile then minify:
 
 ```yaml
-plugins:
-  - @getkist/action-typescript
-  - @getkist/action-terser
+stages:
+    - name: Compile
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: ./tsconfig.json
+                outputDir: ./dist/js
 
-pipeline:
-  build:
-    stages:
-      - name: compile
-        steps:
-          - action: TypeScriptCompilerAction
+    - name: Minify
+      dependsOn: [Compile]
+      steps:
+          - name: MinifyIndex
+            action: JavaScriptMinifyAction
             options:
-              tsconfig: tsconfig.json
-              outDir: dist/js
-              
-      - name: minify
-        steps:
-          - action: JavaScriptMinifyAction
-            options:
-              inputFile: dist/js/index.js
-              outputFile: dist/js/index.min.js
-              sourceMap: true
+                inputPath: ./dist/js/index.js
+                outputPath: ./dist/js/index.min.js
 ```
 
-## Compression Options
-
-Common compression options:
+## Common customConfig Keys
 
 ```yaml
-compress:
-  # Remove console statements
-  drop_console: true
-  
-  # Remove debugger statements
-  drop_debugger: true
-  
-  # Inline simple functions
-  inline: true
-  
-  # Remove dead code
-  dead_code: true
-  
-  # Pass count for compression
-  passes: 2
-```
+customConfig:
+    # Compression behavior
+    compress:
+        drop_console: true      # Remove console statements
+        drop_debugger: true     # Remove debugger statements
+        dead_code: true         # Remove dead code
+        passes: 2               # Compression passes
 
-## Output Format Options
-
-Control output formatting:
-
-```yaml
-format:
-  # Preserve some comments
-  comments: "some"
-  
-  # Use semicolons
-  semicolons: true
-  
-  # Quote style
-  quote_style: 3
+    # Output formatting
+    format:
+        comments: "some"        # Preserve some comments
+        semicolons: true        # Use semicolons
 ```
 
 ## Size Reduction
@@ -138,7 +119,7 @@ format:
 Typical size reduction with default settings:
 
 | Input | Output | Reduction |
-|-------|--------|-----------|
+| --- | --- | --- |
 | 100 KB | ~40 KB | 60% |
 | 500 KB | ~180 KB | 64% |
 | 1 MB | ~350 KB | 65% |
@@ -150,5 +131,4 @@ Enable gzip compression on your server for an additional 70-80% reduction when s
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-terser)
-- [GitHub](https://github.com/getkist/action-terser)
-- [Changelog](https://github.com/getkist/action-terser/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-terser)

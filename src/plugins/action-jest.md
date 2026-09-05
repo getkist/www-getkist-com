@@ -1,6 +1,6 @@
 # @getkist/action-jest
 
-Jest test runner with coverage and watch mode support.
+Jest test runner with coverage support.
 
 ## Installation
 
@@ -8,71 +8,100 @@ Jest test runner with coverage and watch mode support.
 npm install --save-dev @getkist/action-jest
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
+
 ## Actions
 
 ### JestAction
 
-Runs tests using Jest.
+Runs tests by spawning the Jest CLI. Options map directly to Jest's own CLI flags; anything left unset falls back to Jest's defaults.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `config` | `string` | Auto-detected | Path to Jest config |
-| `testMatch` | `string[]` | - | Glob patterns for test files |
-| `coverage` | `boolean` | `false` | Collect coverage |
-| `watch` | `boolean` | `false` | Watch mode |
-| `watchAll` | `boolean` | `false` | Watch all files |
-| `verbose` | `boolean` | `false` | Verbose output |
-| `passWithNoTests` | `boolean` | `false` | Pass if no tests found |
-| `maxWorkers` | `number` | - | Number of workers |
+| --- | --- | --- | --- |
+| `configPath` | `string` | Jest's own discovery | Path to a Jest config file (`--config`) |
+| `testPathPattern` | `string` | - | Regex matched against test file paths (`--testPathPattern`) |
+| `testNamePattern` | `string` | - | Regex matched against full test names (`--testNamePattern`) |
+| `coverage` | `boolean` | `false` | Collect and report coverage |
+| `coverageReporters` | `string[]` | Jest defaults | Coverage reporters (e.g. `text`, `lcov`, `html`) |
+| `coverageThresholdBranches` | `number` | - | Minimum branch coverage % (0-100) |
+| `coverageThresholdFunctions` | `number` | - | Minimum function coverage % (0-100) |
+| `coverageThresholdLines` | `number` | - | Minimum line coverage % (0-100) |
+| `coverageThresholdStatements` | `number` | - | Minimum statement coverage % (0-100) |
+| `runInBand` | `boolean` | `false` | Run tests serially in the current process |
+| `maxWorkers` | `number \| string` | Jest default | Worker count or percentage string (e.g. `"50%"`) |
+| `onlyChanged` | `boolean` | `false` | Only run tests related to changed files |
+| `bail` | `boolean \| number` | `false` | Stop after the first (or N) failing suites |
+| `updateSnapshot` | `boolean` | `false` | Rewrite failing snapshots |
+| `clearMocks` | `boolean` | `false` | Clear mocks before every test |
+| `resetMocks` | `boolean` | `false` | Reset mock state before every test |
+| `verbose` | `boolean` | `false` | Report individual test results |
+| `silent` | `boolean` | `false` | Suppress console output from tests |
+| `passWithNoTests` | `boolean` | `false` | Don't fail when no test files are found |
+| `detectOpenHandles` | `boolean` | `false` | Print open handles preventing a clean exit |
+| `forceExit` | `boolean` | `false` | Force the Jest process to exit after the run |
+| `watch` | `boolean` | `false` | Jest watch mode (interactive; blocks a pipeline run) |
+| `watchAll` | `boolean` | `false` | Watch mode re-running the entire suite |
+| `cwd` | `string` | `process.cwd()` | Working directory Jest is spawned from |
+| `nodeOptions` | `string` | - | `NODE_OPTIONS` for the spawned Jest process |
+| `env` | `object` | - | Extra environment variables for the spawned process |
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-jest
-
-pipeline:
-  test:
-    stages:
-      - name: test
-        steps:
-          - action: JestAction
+stages:
+    - name: Test
+      steps:
+          - name: UnitTests
+            action: JestAction
+            options: {}
 ```
 
 #### With Coverage
 
 ```yaml
-- action: JestAction
-  options:
-    coverage: true
-    verbose: true
+stages:
+    - name: Test
+      steps:
+          - name: UnitTests
+            action: JestAction
+            options:
+                coverage: true
+                verbose: true
 ```
 
-#### Custom Config
+#### With Coverage Thresholds
 
 ```yaml
-- action: JestAction
-  options:
-    config: jest.config.js
-    testMatch:
-      - "**/__tests__/**/*.test.ts"
+stages:
+    - name: Test
+      steps:
+          - name: UnitTests
+            action: JestAction
+            options:
+                configPath: ./jest.config.js
+                coverage: true
+                coverageReporters:
+                    - text
+                    - lcov
+                coverageThresholdLines: 80
+                coverageThresholdBranches: 70
 ```
 
 #### CI Configuration
 
 ```yaml
-pipeline:
-  ci:
-    stages:
-      - name: test
-        steps:
-          - action: JestAction
+stages:
+    - name: Test
+      steps:
+          - name: UnitTests
+            action: JestAction
             options:
-              coverage: true
-              maxWorkers: 2
-              verbose: true
+                coverage: true
+                maxWorkers: 2
+                bail: 1
+                verbose: true
 ```
 
 ## Jest Configuration
@@ -88,64 +117,57 @@ export default {
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts'
-  ],
-  coverageThreshold: {
-    global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
-    }
-  }
+  ]
 };
 ```
 
-### jest.config.cjs (CommonJS)
+### ESM Projects
 
-```javascript
-module.exports = {
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.test.ts']
-};
+For ESM test setups, pass Node flags to the spawned Jest process:
+
+```yaml
+stages:
+    - name: Test
+      steps:
+          - name: UnitTests
+            action: JestAction
+            options:
+                nodeOptions: "--experimental-vm-modules"
 ```
 
 ## Complete Build Pipeline
 
 ```yaml
-plugins:
-  - @getkist/action-eslint
-  - @getkist/action-typescript
-  - @getkist/action-jest
+stages:
+    - name: Lint
+      steps:
+          - name: LintSources
+            action: LintAction
+            options:
+                targetFiles: ["src/**/*.ts"]
 
-pipeline:
-  test:
-    stages:
-      - name: lint
-        steps:
-          - action: LintAction
+    - name: Build
+      dependsOn: [Lint]
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
             options:
-              files: ["src/**/*.ts"]
-              
-      - name: build
-        steps:
-          - action: TypeScriptCompilerAction
+                tsconfigPath: ./tsconfig.json
+
+    - name: Test
+      dependsOn: [Build]
+      steps:
+          - name: UnitTests
+            action: JestAction
             options:
-              tsconfig: tsconfig.json
-              
-      - name: test
-        steps:
-          - action: JestAction
-            options:
-              coverage: true
+                coverage: true
 ```
 
 ## Coverage Reports
 
 When `coverage: true`, Jest generates reports in the `coverage/` directory:
 
-```
+```text
 coverage/
 ├── clover.xml
 ├── coverage-final.json
@@ -154,32 +176,11 @@ coverage/
 └── lcov.info
 ```
 
-## Watch Mode
-
-For development, use watch mode:
-
-```yaml
-pipeline:
-  dev:
-    stages:
-      - name: test
-        steps:
-          - action: JestAction
-            options:
-              watch: true
-```
-
-Run with:
-
-```bash
-npx kist run dev
-```
-
 ## Error Output
 
-Test failures are reported with details:
+Jest's output streams directly to the console. A non-zero Jest exit code fails the step (and, by default, the build):
 
-```
+```text
 FAIL  src/__tests__/utils.test.ts
   ● Utils › should format date correctly
 
@@ -188,17 +189,15 @@ FAIL  src/__tests__/utils.test.ts
     Expected: "2024-01-15"
     Received: "2024-1-15"
 
-      15 |   it('should format date correctly', () => {
-    > 16 |     expect(formatDate(date)).toBe('2024-01-15');
-         |                              ^
-      17 |   });
-
 Test Suites: 1 failed, 1 total
 Tests:       1 failed, 5 passed, 6 total
 ```
 
+::: warning Watch mode blocks pipelines
+`watch` and `watchAll` are intended for local, interactive use. Jest never exits in watch mode, so an automated pipeline run will block indefinitely.
+:::
+
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-jest)
-- [GitHub](https://github.com/getkist/action-jest)
-- [Changelog](https://github.com/getkist/action-jest/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-jest)

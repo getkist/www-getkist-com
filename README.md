@@ -16,10 +16,27 @@ This repository contains the documentation website for all projects under the [g
 ## Features
 
 - 📚 **Centralized Documentation** - All getkist projects in one place
-- 🔄 **Auto-sync** - Automatically pulls documentation from getkist repositories
 - 🎨 **Modern Design** - Clean, responsive interface built with VitePress
 - 🔍 **Full-text Search** - Find what you need quickly
 - ⚡️ **Fast & Static** - Optimized for performance and SEO
+
+## API reference
+
+`src/api/reference/` is generated from the TypeScript sources of the `kist`
+package by TypeDoc, and is committed — the deploy workflow checks out only this
+repository, so it cannot regenerate the pages itself.
+
+Regenerate after a change to kist's public API or its doc comments:
+
+```bash
+# with a kist checkout beside this one, or KIST_REPO pointing at it
+npm run sync:api
+```
+
+That runs TypeDoc in the kist repository and copies its Markdown here, rewriting
+internal links to extensionless site paths and marking every page generated.
+Do not edit anything under `src/api/reference/` — change the doc comment in kist
+and re-run.
 
 ## Quick Start
 
@@ -37,9 +54,6 @@ cd www-getkist-com
 
 # Install dependencies
 npm install
-
-# Sync documentation from getkist repos
-npm run sync:docs
 
 # Start development server
 npm run docs:dev
@@ -59,13 +73,19 @@ npm run docs:build
 # Preview production build
 npm run docs:preview
 
-# Sync documentation from getkist repositories
-npm run sync:docs
+# Format / lint TypeScript sources
+npm run format
+npm run lint
 ```
+
+> **Note:** `package.json` also defines `npm run sync:docs`, which points to
+> `scripts/sync-docs.js`. That script is not currently present in the
+> repository, so the command fails; project documentation under
+> `src/projects/` is maintained manually for now.
 
 ## Documentation Structure
 
-```
+```text
 src/
 ├── .vitepress/          # VitePress configuration
 │   └── config.js        # Site configuration
@@ -74,37 +94,29 @@ src/
 │   ├── installation.md
 │   ├── configuration.md
 │   ├── architecture.md
-│   └── best-practices.md
-├── projects/            # Project docs (auto-synced from repo doc/ folders)
-│   ├── index.md
-│   └── <project>/...    # Synced doc trees per project
-├── api/                 # API reference docs
-│   └── index.md
+│   ├── core-actions.md
+│   ├── plugin-development.md
+│   ├── best-practices.md
+│   └── contributing.md
+├── api/                 # API reference
+│   ├── index.md         # Programmatic API
+│   └── cli.md           # CLI reference
+├── plugins/             # Plugin docs (index, using-plugins, action-*.md)
+├── projects/            # Per-project doc trees (maintained manually)
+├── media/               # Media assets
+├── public/              # Static files served as-is (CNAME, ...)
 ├── contributing.md      # Contributing guide
 └── index.md             # Homepage
 ```
 
 ## Adding Documentation
 
-### Automatic Sync
-
-Run `npm run sync:docs` to automatically fetch documentation from all getkist repositories. The script:
-
-1. Fetches all repos from the getkist organization
-2. Pulls each repo's `doc/` directory (falls back to `docs/`, then README)
-3. Stores each doc tree under `src/projects/<repo>/`
-4. Ensures an `index.md` entry point for each project
-5. Updates the projects index and sidebar navigation
-
-### Manual Documentation
-
-To add custom documentation:
-
 1. Create markdown files in the appropriate directory under `src/`
 2. Update `src/.vitepress/config.js` to add navigation links
 3. Use frontmatter for page metadata
 
 Example:
+
 ```markdown
 ---
 layout: doc
@@ -114,35 +126,11 @@ title: Your Page Title
 # Your Content Here
 ```
 
+See [SETUP.md](SETUP.md) for the full workflow and [QUICK_REFERENCE.md](QUICK_REFERENCE.md) for a terse command crib.
+
 ## Deployment
 
-### GitHub Pages
-
-```bash
-# Build the site
-npm run docs:build
-
-# Deploy to GitHub Pages
-# (Configure your deployment workflow)
-```
-
-### Other Platforms
-
-The built site (in `src/.vitepress/dist`) can be deployed to any static hosting service:
-- Vercel
-- Netlify
-- Cloudflare Pages
-- AWS S3
-- etc.
-
-## Environment Variables
-
-Optional environment variables for enhanced functionality:
-
-```bash
-# GitHub token for higher API rate limits
-GITHUB_TOKEN=your_github_token
-```
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds the site and deploys it to GitHub Pages on pushes to `main`/`dev`. The built site (in `src/.vitepress/dist`) can also be deployed to any static hosting service (Vercel, Netlify, Cloudflare Pages, AWS S3, etc.). Details in [SETUP.md](SETUP.md).
 
 ## Contributing
 
@@ -156,30 +144,15 @@ We welcome contributions! Please see our [Contributing Guide](src/contributing.m
 4. Test locally with `npm run docs:dev`
 5. Submit a pull request
 
-## Project Structure
-
-```
-.
-├── src/                 # Documentation source files (VitePress site)
-│   ├── .vitepress/     # Site configuration
-│   └── projects/       # Synced doc trees per project
-├── scripts/            # Build and sync scripts
-│   └── sync-docs.js    # Documentation sync script
-├── .github/            # CI/CD workflows
-├── package.json        # Dependencies and scripts
-└── README.md           # This file
-```
-
 ## Technology Stack
 
 - [VitePress](https://vitepress.dev/) - Static site generator
 - [Vue 3](https://vuejs.org/) - UI framework
 - [Vite](https://vitejs.dev/) - Build tool
-- [GitHub API](https://docs.github.com/en/rest) - Repository data
 
 ## Support
 
-- 📖 [Documentation](https://getkist.com)
+- 📖 [Documentation](https://www.getkist.com/)
 - 💬 [Discussions](https://github.com/getkist/www-getkist-com/discussions)
 - 🐛 [Issues](https://github.com/getkist/www-getkist-com/issues)
 - 🔗 [GitHub Organization](https://github.com/getkist)
@@ -191,5 +164,5 @@ MIT License - see LICENSE file for details
 ---
 
 <p align="center">
-    <b>Made with ❤️ by <a href="https://www.scape.agency" target="_blank">Scape Agency</a></b>
+    <b>Made with ❤️ by <a href="https://www.scape.press" target="_blank">Scape Press</a></b>
 </p>

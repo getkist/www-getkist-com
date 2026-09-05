@@ -90,8 +90,9 @@ Three things in kist are meant to keep that from repeating:
 
 1. **Plugins stay thin and are tested.** Each `@getkist/action-*` package runs
    its own suite on every push, against the tool it wraps.
-2. **There is always an escape hatch.** `RunScriptAction` runs any command. A
-   missing wrapper is never a blocker; it is at most an inconvenience.
+2. **There is always an escape hatch.** `RunScriptAction` runs a Node script,
+   so anything reachable from Node is one step away. A missing wrapper is never
+   a blocker; it is at most an inconvenience.
 3. **Configuration is schema-validated.** The
    [JSON Schema](https://www.getkist.com/schema.json) means your editor tells
    you what a step accepts before you run it, rather than the pipeline telling

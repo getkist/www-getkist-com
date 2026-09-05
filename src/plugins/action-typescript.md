@@ -8,69 +8,76 @@ TypeScript compilation with full tsconfig.json support.
 npm install --save-dev @getkist/action-typescript
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
+
 ## Actions
 
 ### TypeScriptCompilerAction
 
-Compiles TypeScript files to JavaScript.
+Compiles TypeScript files to JavaScript using the TypeScript compiler.
 
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `tsconfig` | `string` | `"tsconfig.json"` | Path to tsconfig.json |
-| `project` | `string` | - | Alternative to tsconfig |
-| `outDir` | `string` | - | Override output directory |
-| `declaration` | `boolean` | - | Generate .d.ts files |
-| `sourceMap` | `boolean` | - | Generate source maps |
-| `watch` | `boolean` | `false` | Watch mode |
+| --- | --- | --- | --- |
+| `tsconfigPath` | `string` | `"tsconfig.json"` | Path to the tsconfig.json file |
+| `filePaths` | `string[]` | Files from tsconfig | Specific files to compile, overriding the tsconfig file list |
+| `outputDir` | `string` | `outDir` from tsconfig | Override the output directory |
+| `compilerOptions` | `object` | `{}` | Additional compiler options merged over those from tsconfig |
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-typescript
-
-pipeline:
-  build:
-    stages:
-      - name: compile
-        steps:
-          - action: TypeScriptCompilerAction
+stages:
+    - name: Compile
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
             options:
-              tsconfig: tsconfig.json
+                tsconfigPath: ./tsconfig.json
 ```
 
 #### With Options Override
 
 ```yaml
-- action: TypeScriptCompilerAction
-  options:
-    tsconfig: tsconfig.json
-    outDir: dist/js
-    declaration: true
-    sourceMap: true
+stages:
+    - name: Compile
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: ./tsconfig.json
+                outputDir: ./dist/js
+                compilerOptions:
+                    declaration: true
+                    sourceMap: true
 ```
 
 #### Multiple Configurations
 
 ```yaml
-pipeline:
-  build:
-    stages:
-      - name: compile
-        steps:
-          # Build main library
-          - action: TypeScriptCompilerAction
+stages:
+    - name: Compile
+      steps:
+          # Build ESM output
+          - name: CompileEsm
+            action: TypeScriptCompilerAction
             options:
-              tsconfig: tsconfig.lib.json
-              outDir: dist/lib
-              
-          # Build CLI
-          - action: TypeScriptCompilerAction
+                tsconfigPath: ./tsconfig.json
+                outputDir: ./dist/esm
+                compilerOptions:
+                    module: ESNext
+                    declaration: true
+
+          # Build CommonJS output
+          - name: CompileCjs
+            action: TypeScriptCompilerAction
             options:
-              tsconfig: tsconfig.cli.json
-              outDir: dist/cli
+                tsconfigPath: ./tsconfig.json
+                outputDir: ./dist/cjs
+                compilerOptions:
+                    module: CommonJS
+                    declaration: false
 ```
 
 ## tsconfig.json Example
@@ -99,31 +106,29 @@ pipeline:
 Lint before compiling:
 
 ```yaml
-plugins:
-  - @getkist/action-eslint
-  - @getkist/action-typescript
+stages:
+    - name: Lint
+      steps:
+          - name: LintSources
+            action: LintAction
+            options:
+                targetFiles:
+                    - "src/**/*.ts"
 
-pipeline:
-  build:
-    stages:
-      - name: lint
-        steps:
-          - action: LintAction
+    - name: Compile
+      dependsOn: [Lint]
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
             options:
-              files: ["src/**/*.ts"]
-              
-      - name: compile
-        steps:
-          - action: TypeScriptCompilerAction
-            options:
-              tsconfig: tsconfig.json
+                tsconfigPath: ./tsconfig.json
 ```
 
 ## Output Structure
 
 With default settings:
 
-```
+```text
 src/
 ├── index.ts
 ├── lib/
@@ -144,14 +149,13 @@ dist/
 
 TypeScript errors are reported with full diagnostic information:
 
-```
+```text
 src/index.ts(15,3): error TS2339: Property 'foo' does not exist on type 'Bar'.
 ```
 
-The action fails if there are any compilation errors.
+The action fails (and, by default, the build halts) if there are any compilation errors.
 
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-typescript)
-- [GitHub](https://github.com/getkist/action-typescript)
-- [Changelog](https://github.com/getkist/action-typescript/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-typescript)

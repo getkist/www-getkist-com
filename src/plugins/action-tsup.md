@@ -8,6 +8,8 @@ Fast bundling with tsup (powered by esbuild).
 npm install --save-dev @getkist/action-tsup
 ```
 
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
+
 ## Actions
 
 ### BundleAction
@@ -17,36 +19,33 @@ Bundles JavaScript/TypeScript using tsup.
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `entry` | `string\|string[]` | Required | Entry point(s) |
+| --- | --- | --- | --- |
+| `entry` | `string \| string[] \| object` | Required | Entry point(s) |
 | `outDir` | `string` | `"dist"` | Output directory |
-| `format` | `string[]` | `["esm"]` | Output formats: `esm`, `cjs`, `iife` |
-| `dts` | `boolean` | `false` | Generate declaration files |
+| `format` | `string \| string[]` | `"esm"` | Output format(s): `esm`, `cjs`, `iife` |
+| `dts` | `boolean` | `true` | Generate declaration files |
 | `sourcemap` | `boolean` | `false` | Generate source maps |
 | `minify` | `boolean` | `false` | Minify output |
 | `clean` | `boolean` | `true` | Clean outDir before build |
-| `external` | `string[]` | `[]` | External dependencies |
 | `splitting` | `boolean` | `false` | Code splitting |
-| `config` | `string` | - | Path to tsup.config.ts |
+| `target` | `string` | `"node20"` | Target environment |
+| `external` | `string[]` | `[]` | External packages excluded from the bundle |
+| `tsupOptions` | `object` | `{}` | Additional raw tsup options, merged in last (they override the options above) |
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-tsup
-
-pipeline:
-  build:
-    stages:
-      - name: bundle
-        steps:
-          - action: BundleAction
+stages:
+    - name: Bundle
+      steps:
+          - name: BundleLibrary
+            action: BundleAction
             options:
-              entry: src/index.ts
-              outDir: dist
-              format:
-                - esm
-                - cjs
+                entry: src/index.ts
+                outDir: dist
+                format:
+                    - esm
+                    - cjs
 ```
 
 #### Library Build
@@ -54,96 +53,85 @@ pipeline:
 Full library build with types:
 
 ```yaml
-- action: BundleAction
-  options:
-    entry: src/index.ts
-    outDir: dist
-    format:
-      - esm
-      - cjs
-    dts: true
-    sourcemap: true
-    clean: true
+stages:
+    - name: Bundle
+      steps:
+          - name: BundleLibrary
+            action: BundleAction
+            options:
+                entry: src/index.ts
+                outDir: dist
+                format:
+                    - esm
+                    - cjs
+                dts: true
+                sourcemap: true
+                clean: true
 ```
 
 #### Multiple Entry Points
 
 ```yaml
-- action: BundleAction
-  options:
-    entry:
-      - src/index.ts
-      - src/cli.ts
-    outDir: dist
-    format:
-      - esm
+stages:
+    - name: Bundle
+      steps:
+          - name: BundleAll
+            action: BundleAction
+            options:
+                entry:
+                    - src/index.ts
+                    - src/cli.ts
+                outDir: dist
+                format:
+                    - esm
 ```
 
 #### Browser Bundle
 
 ```yaml
-- action: BundleAction
-  options:
-    entry: src/browser.ts
-    outDir: dist
-    format:
-      - iife
-    minify: true
-    sourcemap: true
+stages:
+    - name: Bundle
+      steps:
+          - name: BundleBrowser
+            action: BundleAction
+            options:
+                entry: src/browser.ts
+                outDir: dist
+                format:
+                    - iife
+                minify: true
+                sourcemap: true
 ```
 
 ## Output Formats
 
 | Format | Extension | Use Case |
-|--------|-----------|----------|
+| --- | --- | --- |
 | `esm` | `.mjs` | Modern bundlers, Node.js 14+ |
 | `cjs` | `.cjs` | Node.js CommonJS |
 | `iife` | `.global.js` | Browser script tags |
 
-## tsup.config.ts
+## Advanced tsup Options
 
-For complex configurations:
-
-```typescript
-import { defineConfig } from 'tsup';
-
-export default defineConfig({
-  entry: ['src/index.ts'],
-  format: ['esm', 'cjs'],
-  dts: true,
-  splitting: false,
-  sourcemap: true,
-  clean: true,
-  external: ['react', 'react-dom'],
-  esbuildOptions(options) {
-    options.banner = {
-      js: '/* My Library v1.0.0 */'
-    };
-  }
-});
-```
-
-Then reference it:
+Options not exposed directly can be passed through `tsupOptions`:
 
 ```yaml
-- action: BundleAction
-  options:
-    config: tsup.config.ts
-```
-
-## With Watch Mode
-
-```yaml
-- action: BundleAction
-  options:
-    entry: src/index.ts
-    outDir: dist
-    watch: true
+stages:
+    - name: Bundle
+      steps:
+          - name: BundleLibrary
+            action: BundleAction
+            options:
+                entry: src/index.ts
+                outDir: dist
+                tsupOptions:
+                    shims: true
+                    treeshake: true
 ```
 
 ## Output Structure
 
-```
+```text
 dist/
 ├── index.mjs      # ESM
 ├── index.cjs      # CommonJS
@@ -156,23 +144,22 @@ dist/
 Don't bundle dependencies:
 
 ```yaml
-- action: BundleAction
-  options:
-    entry: src/index.ts
-    outDir: dist
-    external:
-      - react
-      - react-dom
-      - lodash
+stages:
+    - name: Bundle
+      steps:
+          - name: BundleLibrary
+            action: BundleAction
+            options:
+                entry: src/index.ts
+                outDir: dist
+                external:
+                    - react
+                    - react-dom
+                    - lodash
 ```
-
-::: tip
-By default, `peerDependencies` and `dependencies` from `package.json` are treated as external.
-:::
 
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-tsup)
-- [GitHub](https://github.com/getkist/action-tsup)
-- [Changelog](https://github.com/getkist/action-tsup/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-tsup)
 - [tsup documentation](https://tsup.egoist.dev/)

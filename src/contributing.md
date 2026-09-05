@@ -21,6 +21,7 @@ Browse the [getkist organization](https://github.com/getkist) and find a project
 ### 2. Check Issues
 
 Look for existing issues labeled:
+
 - `good first issue` - Great for newcomers
 - `help wanted` - Contributions welcome
 - `bug` - Bug reports needing fixes
@@ -62,8 +63,9 @@ npm install
 ```bash
 npm test
 npm run lint
-npm run type-check
 ```
+
+In the main [kist repository](https://github.com/getkist/kist) you can also run `npm run build:check` for a type-check without emitting output, and `npm run format` to apply Prettier formatting. Other projects may define additional scripts — check each repo's `package.json`.
 
 ### Commit Your Changes
 
@@ -76,6 +78,7 @@ git commit -m "docs: update installation guide"
 ```
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
 - `feat:` - New features
 - `fix:` - Bug fixes
 - `docs:` - Documentation changes
@@ -91,6 +94,7 @@ git push origin your-branch-name
 ```
 
 Then create a pull request on GitHub with:
+
 - Clear title and description
 - Reference related issues
 - Screenshots (if applicable)

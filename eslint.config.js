@@ -81,9 +81,13 @@ export default tseslint.config(
     // -------------------------------------------------------------------------
     {
         ignores: [
-            // Build outputs
-            "dist/**",
-            "build/**",
+            // Build outputs. Anchored with `**/` because a flat-config
+            // ignore is relative to this file: plain "dist/**" matched only a
+            // top-level dist, so VitePress's own output in src/.vitepress/dist
+            // was linted as if it were source — 3113 of the 3121 problems
+            // this config reported came from there.
+            "**/dist/**",
+            "**/build/**",
             "public/**",
 
             // Dependencies
@@ -290,8 +294,14 @@ export default tseslint.config(
         },
 
         rules: {
-            // Enforce import grouping and ordering
-            "import/order": [
+            // Enforce import grouping and ordering.
+            //
+            // Named for the key the plugin is registered under just above.
+            // Written as "import/order" it referred to a plugin called
+            // "import" that is not registered, and ESLint refused to load the
+            // whole configuration — so nothing in this repository was linted
+            // at all.
+            "import-x/order": [
                 "warn",
                 {
                     // Group order: builtin → external → internal → relative

@@ -1,12 +1,14 @@
 # @getkist/action-eslint
 
-ESLint code linting with automatic configuration detection.
+ESLint code linting with optional auto-fixing.
 
 ## Installation
 
 ```bash
 npm install --save-dev @getkist/action-eslint
 ```
+
+Installed plugins are discovered automatically - no configuration needed. The action below becomes available to your pipeline steps by name.
 
 ## Actions
 
@@ -17,65 +19,58 @@ Lints JavaScript and TypeScript files using ESLint.
 #### Options
 
 | Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `files` | `string[]` | Required | Glob patterns for files to lint |
-| `config` | `string` | Auto-detected | Path to ESLint config |
-| `fix` | `boolean` | `false` | Auto-fix problems |
-| `cache` | `boolean` | `true` | Use caching for speed |
-| `maxWarnings` | `number` | `-1` | Max warnings before failure (-1 = unlimited) |
+| --- | --- | --- | --- |
+| `targetFiles` | `string[]` | `["src/**/*.ts"]` | Files or glob patterns to lint |
+| `fix` | `boolean` | `false` | Automatically apply ESLint's suggested fixes |
+| `configPath` | `string` | `"eslint.config.js"` | Path to the ESLint flat config file |
 
 #### Basic Usage
 
 ```yaml
-plugins:
-  - @getkist/action-eslint
-
-pipeline:
-  build:
-    stages:
-      - name: lint
-        steps:
-          - action: LintAction
+stages:
+    - name: Lint
+      steps:
+          - name: LintSources
+            action: LintAction
             options:
-              files:
-                - "src/**/*.ts"
-                - "src/**/*.js"
+                targetFiles:
+                    - "src/**/*.ts"
+                    - "src/**/*.js"
 ```
 
 #### With Auto-Fix
 
 ```yaml
-- action: LintAction
-  options:
-    files: ["src/**/*.ts"]
-    fix: true
-```
-
-#### Strict Mode
-
-Fail on any warnings:
-
-```yaml
-- action: LintAction
-  options:
-    files: ["src/**/*.ts"]
-    maxWarnings: 0
+stages:
+    - name: Lint
+      steps:
+          - name: LintAndFix
+            action: LintAction
+            options:
+                targetFiles: ["src/**/*.ts"]
+                fix: true
 ```
 
 #### Custom Config
 
 ```yaml
-- action: LintAction
-  options:
-    files: ["src/**/*.ts"]
-    config: eslint.config.js
+stages:
+    - name: Lint
+      steps:
+          - name: LintSources
+            action: LintAction
+            options:
+                targetFiles: ["src/**/*.ts"]
+                configPath: eslint.config.mjs
 ```
+
+::: warning Lint findings do not fail the build
+`LintAction` reports errors and warnings in the log but resolves successfully even when problems are found. Only unexpected failures (for example an unreadable config file or an invalid glob) fail the step.
+:::
 
 ## ESLint Configuration
 
-### Flat Config (ESLint 9+)
-
-Create `eslint.config.js`:
+The action uses ESLint's flat config format (ESLint 9+). Create `eslint.config.js`:
 
 ```javascript
 import eslint from '@eslint/js';
@@ -96,45 +91,28 @@ export default [
 ];
 ```
 
-### Legacy Config (.eslintrc)
-
-```json
-{
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
-  "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
-  "root": true
-}
-```
-
 ## With Prettier
 
 Combine linting with formatting:
 
 ```yaml
-plugins:
-  - @getkist/action-eslint
-  - @getkist/action-prettier
-
-pipeline:
-  lint:
-    stages:
-      - name: quality
-        steps:
+stages:
+    - name: Quality
+      steps:
           # Lint first
-          - action: LintAction
+          - name: LintSources
+            action: LintAction
             options:
-              files: ["src/**/*.ts"]
-              fix: true
-              
+                targetFiles: ["src/**/*.ts"]
+                fix: true
+
           # Then format
-          - action: PrettierAction
+          - name: FormatSources
+            action: PrettierAction
             options:
-              files: ["src/**/*.ts"]
-              write: true
+                targetFiles:
+                    - "src/index.ts"
+                write: true
 ```
 
 ## CI/CD Usage
@@ -142,23 +120,21 @@ pipeline:
 For CI, don't auto-fix - just report:
 
 ```yaml
-pipeline:
-  ci:
-    stages:
-      - name: lint
-        steps:
-          - action: LintAction
+stages:
+    - name: Lint
+      steps:
+          - name: LintSources
+            action: LintAction
             options:
-              files: ["src/**/*.ts"]
-              fix: false
-              maxWarnings: 0
+                targetFiles: ["src/**/*.ts"]
+                fix: false
 ```
 
 ## Error Output
 
-ESLint errors are reported in standard format:
+ESLint results are printed with the standard "stylish" formatter:
 
-```
+```text
 src/index.ts
   15:3  error  'foo' is not defined  no-undef
   23:1  warning  Unexpected console statement  no-console
@@ -169,5 +145,4 @@ src/index.ts
 ## Links
 
 - [npm](https://npmjs.com/package/@getkist/action-eslint)
-- [GitHub](https://github.com/getkist/action-eslint)
-- [Changelog](https://github.com/getkist/action-eslint/blob/main/CHANGELOG.md)
+- [GitHub](https://github.com/getkist/kist-action-eslint)

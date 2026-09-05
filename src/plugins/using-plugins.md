@@ -1,6 +1,6 @@
 # Using Plugins
 
-Learn how to discover, install, and configure kist plugins.
+Learn how to discover, install, and use kist plugins.
 
 ## Installing Plugins
 
@@ -16,85 +16,81 @@ npm install --save-dev @getkist/action-sass
 npm install --save-dev @getkist/action-sass @getkist/action-typescript @getkist/action-eslint
 ```
 
-### From Source
+## Automatic Discovery
 
-You can also reference local plugins:
+Plugins are **not** declared in `kist.yml`. On startup, kist scans your project's `node_modules` for packages whose names match one of these prefixes:
 
-```yaml
-plugins:
-  # npm package
-  - @getkist/action-sass
-  
-  # Local plugin (relative path)
-  - ./my-plugins/custom-action
-```
+- `@getkist/action-*` - official plugins
+- `kist-action-*` - unscoped community plugins
+- `kist-plugin-*` - unscoped community plugins (legacy prefix)
 
-## Registering Plugins
-
-Declare plugins in your `kist.yml`:
+Every matching package is loaded, and the actions it registers become available to your pipeline steps by name:
 
 ```yaml
-plugins:
-  - @getkist/action-sass
-  - @getkist/action-typescript
-  - @getkist/action-eslint
-
-pipeline:
-  # Your pipeline uses actions from these plugins
+stages:
+    - name: Styles
+      steps:
+          - name: CompileStyles
+            action: StyleProcessingAction   # provided by @getkist/action-sass
+            options:
+                inputFile: ./src/styles/main.scss
+                outputFile: ./dist/css/main.css
+                styleOption: compressed
 ```
 
-Plugins are loaded in order. If two plugins provide the same action name, the later plugin wins.
+Plugins can also be loaded from a local directory or registered programmatically via `PluginManager.registerPlugin()` - see the [Plugin Development Guide](/guide/plugin-development).
 
-## Default Actions
+## Core Actions
 
 Some actions are built into kist and don't require plugins:
 
 | Action | Description |
-|--------|-------------|
-| `CopyAction` | Copy files |
-| `DeleteAction` | Delete files |
-| `LogAction` | Log messages |
-| `ShellAction` | Run shell commands |
+| --- | --- |
+| `DirectoryCleanAction` | Clean a directory |
+| `DirectoryCopyAction` | Copy a directory |
+| `DirectoryCreateAction` | Create a directory |
+| `DocumentationAction` | Generate documentation |
+| `FileCopyAction` | Copy a file |
+| `FileRenameAction` | Rename a file |
+| `PackageManagerAction` | Run package manager commands |
+| `RunScriptAction` | Run a script |
+| `TypeScriptCompilerAction` | Compile TypeScript |
+| `VersionWriteAction` | Write version information |
 
 ## Plugin Options
 
-Each plugin's actions accept specific options. See individual plugin docs for details.
+Each plugin's actions accept specific options, passed via the step's `options` key. See the individual plugin docs for details.
 
 ### Common Patterns
 
-Most plugins follow these conventions:
+Most plugin actions follow one of these conventions:
 
 ```yaml
-# File-based actions
-- action: SomeAction
-  options:
-    inputFile: src/input.ext      # Single input file
-    outputFile: dist/output.ext   # Single output file
+stages:
+    - name: Build
+      steps:
+          # File-based actions: single input, single output
+          - name: CompileStyles
+            action: StyleProcessingAction
+            options:
+                inputFile: ./src/styles/main.scss
+                outputFile: ./dist/css/main.css
+                styleOption: compressed
 
-# Directory-based actions
-- action: SomeAction
-  options:
-    inputDir: src/                # Input directory
-    outputDir: dist/              # Output directory
-    pattern: "**/*.ext"           # Glob pattern
+          # Directory-based actions: input and output directories
+          - name: RenderTemplates
+            action: TemplateRenderAction
+            options:
+                inputDir: ./src/templates
+                outputDir: ./dist
+                pattern: "**/*.html.jinja"
 
-# Multi-file actions
-- action: SomeAction
-  options:
-    files:                        # Array of files
-      - src/file1.ext
-      - src/file2.ext
-    outDir: dist/
-```
-
-### Environment Variables
-
-Use environment variables with the `$&#123;&#123; env.VAR &#125;&#125;` syntax:
-
-```yaml
-- action: TypeScriptCompilerAction
-  options:
-    tsconfig: $&#123;&#123; env.TSCONFIG_PATH &#125;&#125;
+          # Multi-file actions: an array of files or glob patterns
+          - name: LintSources
+            action: LintAction
+            options:
+                targetFiles:
+                    - "src/**/*.ts"
 ```
 
 ## Plugin Discovery
@@ -103,7 +99,7 @@ Use environment variables with the `$&#123;&#123; env.VAR &#125;&#125;` syntax:
 
 1. **Official plugins**: Check the [Plugins List](/plugins/)
 2. **npm search**: Search for `@getkist/action-` packages
-3. **GitHub**: Search for `kist-plugin-*` repositories
+3. **GitHub**: Search for `kist-action-*` repositories
 
 ### Verifying Compatibility
 
@@ -112,42 +108,36 @@ Check the plugin's `package.json` for peer dependencies:
 ```json
 {
   "peerDependencies": {
-    "@getkist/kist": "^0.1.0"
+    "kist": ">=0.1.0"
   }
 }
 ```
 
 ## Troubleshooting
 
-### Plugin Not Found
-
-```
-Error: Plugin '@getkist/action-example' not found
-```
-
-**Solutions:**
-1. Verify the plugin is installed: `npm ls @getkist/action-example`
-2. Check the package name is correct
-3. Run `npm install` to ensure dependencies are installed
-
 ### Action Not Found
 
-```
+```text
 Error: Action 'SomeAction' not found
 ```
 
+kist validates the config at startup (after plugin discovery), so a step referencing an unregistered action fails fast.
+
 **Solutions:**
-1. Check the plugin is listed in `kist.yml` plugins section
-2. Verify the action name (case-sensitive)
-3. Check the plugin documentation for correct action names
+
+1. Verify the plugin is installed in the project: `npm ls @getkist/action-example`
+2. Check the package name matches a discovery prefix (`@getkist/action-*`, `kist-action-*`, `kist-plugin-*`)
+3. Verify the action name in your step (case-sensitive)
+4. Run `npm install` to ensure dependencies are installed
+5. Run `kist --verbose` to see which plugins were discovered
 
 ### Version Conflicts
 
 If you see peer dependency warnings:
 
 ```bash
-# Check kist version
-npx kist --version
+# Check the installed kist version
+npm ls kist
 
 # Update plugins to compatible versions
 npm update @getkist/action-sass
@@ -157,54 +147,63 @@ npm update @getkist/action-sass
 
 ### Organize Large Projects
 
-```yaml
-# For large projects, group related stages
-plugins:
-  - @getkist/action-sass
-  - @getkist/action-postcss
-  - @getkist/action-typescript
-  - @getkist/action-terser
-  - @getkist/action-eslint
-  - @getkist/action-prettier
-  - @getkist/action-jest
+Use stages with `dependsOn` to order work, and `parallel` steps where order doesn't matter:
 
-pipeline:
-  build:
-    stages:
-      # Lint stage runs first
-      - name: lint
-        steps:
-          - action: LintAction
-          - action: PrettierAction
+```yaml
+options:
+    logLevel: info
+
+stages:
+    # Quality checks run first
+    - name: Lint
+      steps:
+          - name: LintSources
+            action: LintAction
             options:
-              check: true
-              
-      # Build stages
-      - name: styles
-        steps:
-          - action: StyleProcessingAction
-          - action: PostCssAction
-          
-      - name: scripts
-        steps:
-          - action: TypeScriptCompilerAction
-          - action: JavaScriptMinifyAction
-          
-      # Test stage runs last
-      - name: test
-        steps:
-          - action: JestAction
+                targetFiles:
+                    - "src/**/*.ts"
+
+    # Build stages
+    - name: Styles
+      dependsOn: [Lint]
+      steps:
+          - name: CompileStyles
+            action: StyleProcessingAction
+            options:
+                inputFile: ./src/styles/main.scss
+                outputFile: ./dist/css/main.css
+                styleOption: compressed
+
+    - name: Scripts
+      dependsOn: [Lint]
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: ./tsconfig.json
+          - name: MinifyBundle
+            action: JavaScriptMinifyAction
+            options:
+                inputPath: ./dist/js/index.js
+                outputPath: ./dist/js/index.min.js
+
+    # Tests run last
+    - name: Test
+      dependsOn: [Styles, Scripts]
+      steps:
+          - name: UnitTests
+            action: JestAction
+            options:
+                coverage: true
 ```
 
-### Watch Mode
+### Live Reload
 
-Use the `--watch` flag for development:
+Use the `--live` flag during development to serve your output directory and re-run the pipeline on changes:
 
 ```bash
-npx kist run build --watch
+npx kist --live
 ```
-
-Many plugins support incremental builds in watch mode.
 
 ### CI/CD Integration
 
@@ -217,9 +216,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm ci
-      - run: npx kist run build
+      - run: npx kist
 ```
 
 ## Next Steps

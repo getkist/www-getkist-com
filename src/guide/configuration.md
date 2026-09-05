@@ -4,10 +4,10 @@ Complete guide to configuring kist for your project.
 
 ## Configuration File
 
-kist uses YAML configuration files. By default, kist looks for `kist.yml` in your project root.
+kist uses YAML configuration files. By default, kist looks for `kist.yaml`, then `kist.yml`, in your project root.
 
 ```bash
-# Use default config
+# Use the default config (kist.yaml or kist.yml)
 kist
 
 # Specify a config file
@@ -16,170 +16,148 @@ kist --config kist.production.yml
 
 ## Basic Structure
 
+A configuration file has up to four top-level keys — `extends`, `metadata`, `options`, and `stages`:
+
 ```yaml
-# Project metadata
-name: my-project
-version: 1.0.0
+metadata:
+    name: my-project
+    version: 1.0.0
 
-# Plugins to load
-plugins:
-  - @getkist/action-sass
-  - @getkist/action-typescript
+options:
+    logLevel: info
+    haltOnFailure: true
 
-# Build pipeline definition
-pipeline:
-  build:
-    stages:
-      - name: stage-name
-        steps:
-          - action: ActionName
+stages:
+    - name: StageName
+      steps:
+          - name: StepName
+            action: ActionName
             options:
-              key: value
+                key: value
 ```
+
+Plugins are **not** declared in the configuration. Install a plugin package (for example `npm install --save-dev @getkist/action-sass`) and kist discovers it automatically from `node_modules`; its actions become available to steps by name. See [Using Plugins](/plugins/using-plugins).
 
 ## Configuration Options
 
-### Project Metadata
+### Metadata
+
+Optional, purely informational — useful for documentation and tooling:
 
 ```yaml
-name: my-project          # Project name
-version: 1.0.0            # Project version (semver)
-description: My project   # Optional description
+metadata:
+    name: my-project # Project name
+    version: 1.0.0 # Project version (semver)
+    description: My project # Optional description
+    author: Jane Doe # Optional author
+    tags: # Optional key-value pairs
+        category: web
 ```
 
-### Plugins
+### Global Options
 
-Declare plugins to load:
+All options are optional and have sensible defaults:
 
 ```yaml
-plugins:
-  # Official plugins (scoped)
-  - @getkist/action-sass
-  - @getkist/action-typescript
-  
-  # Community plugins
-  - kist-plugin-custom
-  
-  # Local plugins
-  - ./plugins/my-plugin
+options:
+    # Free-form mode string, e.g. development or production
+    mode: development
+
+    # Log verbosity: debug | info | warn | error (default: info)
+    logLevel: info
+
+    # Stop the pipeline and exit 1 on the first failure (default: true).
+    # Set to false to log failures and continue.
+    haltOnFailure: true
+
+    # Build caching
+    cache:
+        enabled: true
+        cacheDir: ".kist-cache"
+        maxCacheSize: 1073741824 # bytes (1 GB)
+        ttl: 604800000 # milliseconds (7 days)
+
+    # Performance tuning
+    performance:
+        maxConcurrentStages: 4 # Cap on stages running at once
+        maxConcurrentSteps: 8 # Cap on parallel steps per stage
+        showProgress: true # Progress bar (default: true)
+
+    # Live reload (see also the --live CLI flag)
+    live:
+        enabled: false
+        port: 3000
+        root: public # Static root served by the live server
+        watchPaths:
+            - src/**
+            - config/**
+        ignoredPaths:
+            - node_modules/**
 ```
 
-### Pipeline Definition
+### Stages
 
-Define your build pipeline with stages and steps:
+`stages` is the pipeline definition — a list of stages, each with a list of steps:
 
 ```yaml
-pipeline:
-  # Pipeline name
-  build:
-    # Optional pipeline settings
-    parallel: false        # Run stages in parallel
-    continueOnError: false # Stop on first error
-    
-    stages:
-      - name: prepare
-        steps:
-          - action: DirectoryCleanAction
+stages:
+    - name: Prepare # Required, must be unique
+      steps:
+          - name: CleanDist # Required, unique within the stage
+            action: DirectoryCleanAction
             options:
-              directory: dist
-              
-          - action: DirectoryCreateAction
+                dirPath: ./dist
+
+    - name: Compile
+      dependsOn: # Optional: run only after these stages complete
+          - Prepare
+      parallel: false # Optional: true runs the steps concurrently
+      timeout: 60000 # Optional: stage timeout in milliseconds
+      enabled: true # Optional: false skips the stage
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
             options:
-              directory: dist
-              
-      - name: compile
-        steps:
-          - action: TypeScriptCompilerAction
-            options:
-              tsconfig: tsconfig.json
+                tsconfigPath: ./tsconfig.json
 ```
 
-### Multiple Pipelines
+Stage fields:
 
-Define multiple pipelines for different tasks:
+| Field                | Type     | Description                                                               |
+| -------------------- | -------- | ------------------------------------------------------------------------- |
+| `name`               | string   | **Required.** Unique stage identifier.                                    |
+| `steps`              | array    | **Required.** At least one step (`name`, `action`, `options`).            |
+| `dependsOn`          | string[] | Stage names that must complete first. Validated at startup.               |
+| `parallel`           | boolean  | Run this stage's steps concurrently (default: `false`).                   |
+| `maxConcurrentSteps` | number   | Concurrency cap when `parallel` is `true`.                                |
+| `timeout`            | number   | Milliseconds before the stage is aborted with an error.                   |
+| `enabled`            | boolean  | `false` skips the stage but still satisfies dependants (default: `true`). |
 
-```yaml
-pipeline:
-  dev:
-    stages:
-      - name: build
-        steps:
-          - action: TypeScriptCompilerAction
-            options:
-              tsconfig: tsconfig.json
-              
-  prod:
-    stages:
-      - name: build
-        steps:
-          - action: TypeScriptCompilerAction
-            options:
-              tsconfig: tsconfig.prod.json
-              
-      - name: minify
-        steps:
-          - action: JavaScriptMinifyAction
-            options:
-              inputFile: dist/index.js
-              outputFile: dist/index.min.js
+Stages without dependencies may run concurrently (bounded by `performance.maxConcurrentStages`); `dependsOn` enforces ordering where it matters. Dependencies may reference stages declared **later** in the file — order of declaration doesn't restrict you.
+
+### Validation
+
+The configuration is validated at startup, after plugins are discovered. kist fails fast with a clear error when it finds:
+
+- an action name that isn't registered (core or plugin),
+- duplicate stage names, duplicate step names within a stage, or a stage with no steps,
+- a `dependsOn` entry that references an unknown stage,
+- circular `dependsOn` dependencies.
+
+## Environment-Specific Configs
+
+There is one pipeline per configuration file. For dev/prod variants, create separate files and select one with `--config`:
+
+```bash
+kist --config kist.yml            # default/dev
+kist --config kist.production.yml # production
 ```
 
-## Core Actions
-
-These actions are built into kist:
-
-| Action | Description |
-|--------|-------------|
-| `DirectoryCleanAction` | Remove directory contents |
-| `DirectoryCopyAction` | Copy directories |
-| `DirectoryCreateAction` | Create directories |
-| `FileCopyAction` | Copy files |
-| `FileRenameAction` | Rename files |
-| `VersionWriteAction` | Write version files |
-| `RunScriptAction` | Run npm scripts |
-| `PackageManagerAction` | npm operations |
-| `DocumentationAction` | Generate docs |
-
-## Action Options
-
-Each action has its own options. Example:
-
-```yaml
-- action: StyleProcessingAction
-  options:
-    inputFile: src/styles/main.scss
-    outputFile: dist/css/main.css
-    style: compressed              # compressed | expanded
-    sourceMap: true
-    
-- action: TypeScriptCompilerAction
-  options:
-    tsconfig: tsconfig.json
-    outDir: dist/js
-    declaration: true
-```
-
-## Environment Variables
-
-Use environment variables in your config:
-
-```yaml
-pipeline:
-  build:
-    stages:
-      - name: deploy
-        steps:
-          - action: RunScriptAction
-            options:
-              script: deploy
-              env:
-                API_KEY: ${API_KEY}
-                NODE_ENV: production
-```
+Use [config inheritance](#config-inheritance) to share the common parts.
 
 ## Config Inheritance
 
-Kist supports configuration inheritance through the `extends` keyword, allowing you to create reusable base configurations.
+kist supports configuration inheritance through the `extends` keyword, allowing you to create reusable base configurations.
 
 ### Basic Usage
 
@@ -187,170 +165,117 @@ Create a base config and extend it:
 
 ```yaml
 # kist.base.yml
-name: my-project
-plugins:
-  - @getkist/action-typescript
-  - @getkist/action-sass
+options:
+    logLevel: info
+    cache:
+        enabled: true
 
-defaults:
-  outputDir: dist
+stages:
+    - name: Compile
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: ./tsconfig.json
 ```
 
 ```yaml
-# kist.dev.yml
+# kist.production.yml
 extends: ./kist.base.yml
 
-pipeline:
-  dev:
-    stages:
-      - name: build
-        steps:
-          - action: TypeScriptCompilerAction
+options:
+    logLevel: warn
+
+stages:
+    - name: Minify
+      steps:
+          - name: MinifyBundle
+            action: JavaScriptMinifyAction
             options:
-              sourceMap: true
+                inputPath: ./dist/js/main.js
+                outputPath: ./dist/js/main.min.js
 ```
+
+Running `kist --config kist.production.yml` executes the inherited `Compile` stage followed by the added `Minify` stage, with `logLevel` overridden to `warn`.
 
 ### How Merging Works
 
 When extending a configuration:
 
-1. **Objects are deep merged** - Child properties override parent properties
-2. **Arrays are replaced** - Child arrays completely replace parent arrays
-3. **Primitives are overwritten** - Simple values in child override parent
+1. **`metadata` and `options` are deep-merged** — child values override parent values key by key.
+2. **Stages are merged by name** — a child stage with the same `name` as a parent stage **replaces it entirely**; parent stages without a match are kept, and new child stages are appended after them.
+3. Parent paths are resolved relative to the child file, and circular inheritance is detected and rejected.
 
 ```yaml
 # base.yml
-project:
-  name: my-project
-  settings:
-    debug: false
-    timeout: 30
-plugins:
-  - plugin-a
-  - plugin-b
+options:
+    logLevel: info
+    cache:
+        enabled: true
 
-# child.yml  
-extends: ./base.yml
-project:
-  settings:
-    debug: true    # Overrides to true
-    newOption: 1   # Added
-    # timeout: 30  # Inherited from base
-plugins:
-  - plugin-c       # Replaces entire array
+stages:
+    - name: Build
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: ./tsconfig.json
 ```
 
-**Result:**
 ```yaml
-project:
-  name: my-project
-  settings:
-    debug: true
-    timeout: 30
-    newOption: 1
-plugins:
-  - plugin-c
+# child.yml
+extends: ./base.yml
+
+options:
+    logLevel: debug # Overrides logLevel; cache.enabled inherited
+
+stages:
+    - name: Build # Same name -> REPLACES the parent's Build stage
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
+            options:
+                tsconfigPath: ./tsconfig.prod.json
 ```
 
 ### Multiple Inheritance
 
-Extend from multiple configs (processed in order):
+Extend from multiple configs (merged in order, later parents win, then the child on top):
 
 ```yaml
 extends:
-  - ./configs/base.yml
-  - ./configs/typescript.yml
-  - ./configs/testing.yml
-
+    - ./configs/base.yml
+    - ./configs/typescript.yml
+    - ./configs/testing.yml
 # Your overrides here
-```
-
-### Environment-Specific Configs
-
-```yaml
-# kist.yml (base)
-name: my-app
-plugins:
-  - @getkist/action-typescript
-
-defaults:
-  minify: false
-  sourceMap: true
-```
-
-```yaml
-# kist.production.yml
-extends: ./kist.yml
-
-defaults:
-  minify: true
-  sourceMap: false
-
-pipeline:
-  build:
-    stages:
-      - name: optimize
-        steps:
-          - action: JavaScriptMinifyAction
-```
-
-Run with: `kist --config kist.production.yml`
-
-### Shared Team Configs
-
-Create organization-wide configs:
-
-```yaml
-# @myorg/kist-config-base/index.yml
-name: "{{ project.name }}"
-
-plugins:
-  - @getkist/action-typescript
-  - @getkist/action-eslint
-  - @getkist/action-jest
-
-defaults:
-  compilerOptions:
-    target: ES2020
-    strict: true
-```
-
-```yaml
-# Your project's kist.yml
-extends: "@myorg/kist-config-base"
-
-project:
-  name: my-specific-project
 ```
 
 ## CLI Options
 
-Override config options via CLI:
+The CLI is deliberately small — behavior lives in the config file:
 
 ```bash
-# Specify config file
-kist --config kist.yml
+# Specify a config file
+kist --config kist.production.yml
 
-# Set log level
-kist --log-level debug
+# Enable live reload
+kist --live
 
-# Run specific pipeline
-kist --pipeline prod
-
-# Watch mode
-kist --watch
+# Force debug logging (equivalent to options.logLevel: debug)
+kist --verbose
 ```
 
 ## Best Practices
 
-1. **Use separate configs** for dev/prod environments
-2. **Keep secrets** in environment variables
-3. **Use meaningful stage names** for clarity
-4. **Order stages** by dependency (clean → build → test → deploy)
-5. **Document custom options** in your README
+1. **Use separate config files** (with `extends`) for dev/prod environments
+2. **Keep secrets out of the config** — read them from the environment in your scripts
+3. **Use meaningful stage and step names** — they appear in logs and validation errors
+4. **Model ordering with `dependsOn`** instead of relying on declaration order
+5. **Leave `haltOnFailure` on** — a build that fails loudly is a feature
 
 ## Next Steps
 
 - [Pipeline Architecture](/guide/architecture) - Deep dive into pipelines
+- [Core Actions](/guide/core-actions) - Actions built into kist
 - [Available Plugins](/plugins/) - Browse all plugins
 - [API Reference](/api/) - Full API documentation

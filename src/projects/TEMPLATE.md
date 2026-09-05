@@ -312,7 +312,7 @@ MIT License - see [LICENSE](https://github.com/getkist/project-name/blob/main/LI
 
 ## Credits
 
-Made with ❤️ by [Scape Agency](https://www.scape.agency)
+Made with ❤️ by [Scape Press](https://www.scape.press)
 
 ## Related Projects
 

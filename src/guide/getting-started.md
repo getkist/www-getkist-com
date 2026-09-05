@@ -4,12 +4,12 @@ Get up and running with kist in minutes.
 
 ## What is kist?
 
-**kist** is a lightweight Package Pipeline Processor with a Plugin Architecture, designed to streamline build processes for TypeScript and web projects. It provides a modular framework for managing build pipelines with support for live reload functionality.
+**kist** is a lightweight Package Pipeline Processor with a Plugin Architecture, designed to streamline build processes for TypeScript and web projects. It provides a modular framework for managing build pipelines, with automatic plugin discovery, fail-fast configuration validation, and built-in live reload.
 
 ## Prerequisites
 
-- **Node.js** 20.0.0 or higher
-- **npm** or **yarn**
+- **Node.js** 22.0.0 or higher
+- **npm** 9.0.0 or higher
 
 ## Quick Start
 
@@ -25,34 +25,37 @@ npm install --save-dev kist
 
 ### 2. Create a configuration file
 
-Create a `kist.yml` file in your project root:
+Create a `kist.yml` (or `kist.yaml`) file in your project root:
 
 ```yaml
-name: my-project
-version: 1.0.0
+options:
+    logLevel: info
 
-plugins:
-  - @getkist/action-typescript
-
-pipeline:
-  build:
-    stages:
-      - name: compile
-        steps:
-          - action: TypeScriptCompilerAction
+stages:
+    - name: Compile
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
             options:
-              tsconfig: tsconfig.json
+                tsconfigPath: ./tsconfig.json
 ```
+
+A configuration has up to four top-level keys: `extends`, `metadata`, `options`, and `stages`. Every step names a registered **action** — either one of kist's [core actions](/guide/core-actions) or an action provided by an [installed plugin](/plugins/).
 
 ### 3. Run kist
 
 ```bash
-# Using global installation
+# Uses kist.yaml or kist.yml from the current directory
+kist
+
+# Or with an explicit config file
 kist --config kist.yml
 
-# Or using npx
-npx kist --config kist.yml
+# Or via npx
+npx kist
 ```
+
+kist validates the configuration before running anything — a typo in an action name, a duplicate stage, or a dependency on an unknown stage fails immediately with a clear error. A failing step fails the build with exit code 1 (set `options.haltOnFailure: false` to continue past failures).
 
 ## Next Steps
 
@@ -67,60 +70,66 @@ Check out these example configurations:
 
 ### TypeScript + SCSS Project
 
+Uses the [@getkist/action-sass](https://npmjs.com/package/@getkist/action-sass) and [@getkist/action-terser](https://npmjs.com/package/@getkist/action-terser) plugins — install them as dev dependencies and their actions are discovered automatically:
+
+```bash
+npm install --save-dev @getkist/action-sass @getkist/action-terser
+```
+
 ```yaml
-name: web-app
-version: 1.0.0
+options:
+    haltOnFailure: true
 
-plugins:
-  - @getkist/action-sass
-  - @getkist/action-typescript
-  - @getkist/action-terser
-
-pipeline:
-  build:
-    stages:
-      - name: styles
-        steps:
-          - action: StyleProcessingAction
+stages:
+    - name: Styles
+      steps:
+          - name: CompileScss
+            action: StyleProcessingAction
             options:
-              inputFile: src/styles/main.scss
-              outputFile: dist/css/main.css
-              style: compressed
+                inputFile: ./src/styles/main.scss
+                outputFile: ./dist/css/main.css
+                styleOption: compressed
 
-      - name: scripts
-        steps:
-          - action: TypeScriptCompilerAction
+    - name: Scripts
+      steps:
+          - name: CompileTypeScript
+            action: TypeScriptCompilerAction
             options:
-              tsconfig: tsconfig.json
+                tsconfigPath: ./tsconfig.json
 
-      - name: minify
-        steps:
-          - action: JavaScriptMinifyAction
+    - name: Minify
+      dependsOn:
+          - Scripts
+      steps:
+          - name: MinifyBundle
+            action: JavaScriptMinifyAction
             options:
-              inputFile: dist/js/main.js
-              outputFile: dist/js/main.min.js
+                inputPath: ./dist/js/main.js
+                outputPath: ./dist/js/main.min.js
 ```
 
 ### SVG Icon Library
 
+Uses the [@getkist/action-svg](https://npmjs.com/package/@getkist/action-svg) plugin:
+
 ```yaml
-name: icon-library
-version: 1.0.0
-
-plugins:
-  - @getkist/action-svg
-
-pipeline:
-  build:
-    stages:
-      - name: sprites
-        steps:
-          - action: SvgSpriteAction
+stages:
+    - name: Sprites
+      steps:
+          - name: BuildSprite
+            action: SvgSpriteAction
             options:
-              inputDir: src/icons
-              outputDir: dist/sprites
-              spriteFilename: icons.sprite.svg
+                sourceDir: ./src/icons
+                outputDir: ./dist/sprites
 ```
+
+### Live Reload during Development
+
+```bash
+kist --live
+```
+
+Serves `options.live.root` (default `public/`) on port 3000, watches your source files, and re-runs the pipeline on changes.
 
 ## Getting Help
 

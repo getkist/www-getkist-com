@@ -1,5 +1,10 @@
 import { defineConfig } from 'vitepress'
 
+// Written by `npm run sync:docs` from the TypeDoc output in the kist
+// repository, so the API sidebar tracks the source rather than being
+// hand-maintained here.
+import apiSidebar from './data/api-sidebar.json'
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "kist",
@@ -14,7 +19,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/getting-started' },
-      { text: 'Plugins', link: '/plugins/' },
+      { text: 'Plugins', link: '/plugins/registry' },
       { text: 'API', link: '/api/' },
       { text: 'Compare', link: '/guide/comparison' },
       {
@@ -44,6 +49,9 @@ export default defineConfig({
           items: [
             { text: 'Set up your editor', link: '/guide/editor-setup' },
             { text: 'Cache your build', link: '/guide/caching' },
+            { text: 'Recipes (cookbook)', link: '/guide/cookbook' },
+            { text: 'Migrate from Gulp', link: '/guide/migrate-from-gulp' },
+            { text: 'Migrate from Grunt', link: '/guide/migrate-from-grunt' },
             { text: 'Use plugins', link: '/plugins/using-plugins' },
             { text: 'Write a plugin', link: '/guide/plugin-development' },
             { text: 'Contribute', link: '/guide/contributing' }
@@ -70,6 +78,7 @@ export default defineConfig({
         {
           text: 'Plugins',
           items: [
+            { text: 'Registry', link: '/plugins/registry' },
             { text: 'Overview', link: '/plugins/' },
             { text: 'Using Plugins', link: '/plugins/using-plugins' }
           ]
@@ -115,6 +124,13 @@ export default defineConfig({
             { text: 'CLI', link: '/api/cli' },
             { text: 'Configuration Reference', link: '/guide/configuration' },
             { text: 'JSON Schema', link: 'https://www.getkist.com/schema.json' }
+          ]
+        },
+        {
+          text: 'Generated reference',
+          items: [
+            { text: 'Overview', link: '/api/reference/' },
+            ...apiSidebar
           ]
         }
       ]
